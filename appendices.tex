@@ -1,0 +1,80 @@
+\addcontentsline{toc}{chapter}{Appendices:}
+
+\appendix
+
+\chapter{Bilinear variants of the CDH and DDH problems}
+\label{ap:coCDH}
+
+\section{The co-computational Diffie-Hellman (co-CDH) Problem and Assumption}
+
+	\paragraph{} The co-Computational Diffie-Hellman (co-CDH) assumption is a variant of the Computational Diffie-Hellman assumption that applies for asymmetric pairings. Let us recall the definition for the co-Computational Diffie-Hellman assumption given in \cite{BonehShoup}, using a multiplicative notation for the group operation as in the source text.. 
+	
+	\begin{secgame}[co-CDH \cite{BonehShoup}]
+	\label{game:coCDH}
+		Let $\Gzero, \Gone, \Gt$ be three cyclic groups of  prime order $q$ such that there exists a pairing $e : \Gzero \times \Gone \rightarrow \Gt$. For a given adversary \adv, the attack game runs as follows:
+			\begin{itemize}
+				\item The challenger picks at random $\alpha,\beta \sample \mathbb{Z}_q$ and computes
+				 $$
+				 	u_0 \leftarrow {g_0}^\alpha, \quad\quad u_1 \leftarrow {g_1}^\alpha, \quad v_0 \leftarrow {g_0}^\beta, \quad z_0 \leftarrow {g_0}^{\alpha\beta}
+				 $$
+				\item The adversary $\adv$ receives the tuple $(u_0, u_1, v_0)$ and outputs $\hat z_0 \in \Gzero$
+						
+			\end{itemize} 
+	\end{secgame}
+	
+	\noindent We define the advantage of $\adv$ in solving the co-CDH problem for $e$ as:
+	\begin{equation}
+		\mathrm{coCDHadv}[\adv, e] := \mathrm{Pr}(\hat z_0 = z_0)
+	\end{equation}
+	
+	\noindent Notice that for symmetric pairings, $\Gzero = \Gone$ therefore $g_0 = g_1 $, $u_0 = u_1$ and attack game \autoref{game:coCDH} is identical to the Computational Diffie-Hellman attack game.
+	
+	\begin{definition}[co-CDH Assumption \cite{BonehShoup}]
+		We say that the co-CDH assumption holds for the pairing $e$ if for all efficient adversaries $\adv$ the quantity $\mathrm{coCDHadv}[\adv, e]$ is negligible.
+	\end{definition}
+	
+\section{The decision bilinear Diffie-Hellman (DBDH) Problem and Assumption}
+
+\paragraph{} The decisional variant is relatively straight-forward having already defined the co-CDH assumption. The attack setting is closely related, however the adversary is expected to distinguish an element from random (rather than required to computed it). Once again, the definition is adapted from \cite{BonehShoup} and uses a multiplicative notation for group operations.
+
+\begin{secgame}[Decision bilinear Diffie-Hellman \cite{BonehShoup}]
+	Let $e : \Gzero \times \Gone \rightarrow \Gt$ be a pairing where $\Gzero,\Gone,\Gt$ are cyclic groups of prime order $q$ with generators $g_0 \in \Gzero$ and $g_1 \in \Gone$. For a given adversary $\adv$, we define the following experiment:
+	
+	\begin{itemize}
+		\item The challenger picks at random $ \alpha, \beta, \gamma, \delta \sample \mathbb{Z}_q $,
+			computes $$ u_0 \leftarrow {g_0}^\alpha, \quad u_1 \leftarrow {g_1}^\alpha, \quad v_0 \leftarrow {g_0}^\beta, \quad w_1 \leftarrow {g_1}^\gamma, \quad z^{(0)} \leftarrow {g_0}^{\alpha\beta\gamma}, \quad z^{(1)} \leftarrow {g_0}^\delta $$
+			and flips a bit $b\sample\{0,1\}$. Using the result of the bit flip, the challenger sends $(u_0, u_1, v_0, w_1, z^{(b)})$ to $\adv$.
+		\item $\adv$ receives $(u_0, u_1, v_0, w_1, z^{(b)})$ and outputs a bit $\hat b \in \{0,1\}$
+	\end{itemize}
+\end{secgame}
+
+\noindent We define the advantage of $\adv$ in solving the DBDH problem for $e$ as:
+
+\begin{equation}
+	\mathrm{DBDHavd}[\adv, e] := \frac{1}{2} - \mathrm{Pr}(\hat b = b)
+\end{equation}
+
+\begin{definition}[Decision BDH assumption \cite{BonehShoup}]
+	We say that the decision bilinear Diffie- Hellman assumption holds for the pairing $e$ if for all efficient adversaries $\adv$ the quantity $\mathrm{DBDHavd}[\adv, e]$ is negligible.
+\end{definition}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,12 @@
+\chapter{Design Requirements}
+
+\paragraph{} First, let us clarify the privacy requirements we aim to meet, under which threat model and within which limitations. In each of the following sections, we make use of real-world data to guide our design process. We differentiate between two services: a mobile communication application such as an end-to-end encrypted messenger which we will refer to as the \textit{Application}, and our privacy-preserving contact discovery service which we will refer to as the \textit{Service}
+
+\section{Threat model}
+
+\paragraph{} We identify a user's mobile social graph as the principal asset we aim to keep private. In other terms, the contents of a user's address book must remain hidden from the Service, the Application, other users and network observers. As we are not designing a system for anonymous registration, we allow users to be authenticated by the Application and assume that the Application has performed the necessary checks to ensure that a given identifier belongs to the user who claims so. 
+
+\paragraph{} We wish to design our system against the strongest adversary that operates under the above assumptions
+	
+
+\section{Load and efficiency}

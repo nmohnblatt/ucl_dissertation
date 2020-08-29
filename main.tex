@@ -1,0 +1,81 @@
+\documentclass[a4paper, 12pt]{report}
+
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath, amsfonts, amssymb}
+\usepackage{lmodern}
+\usepackage[colorlinks=true,
+			citecolor=blue,
+			linkcolor=blue,
+			]{hyperref}
+\usepackage{enumerate}
+\usepackage{enumitem}
+\usepackage{comment}
+\usepackage{float}
+\usepackage{a4wide}
+\usepackage{setspace}
+\usepackage [
+	n, % or lambda advantage , 
+	operators , 
+	sets,
+	adversary , 
+	landau , 
+	probability , 
+	notions ,
+	logic ,
+	ff, 
+	mm,
+	primitives ,
+	events , 
+	complexity , 
+	%oracles , 
+	asymptotics , 
+	keys,
+	advantage
+]{cryptocode}
+\usepackage{tabularx}
+
+\newtheorem{definition}{Definition}[chapter]
+\newtheorem{theorem}{Theorem}[chapter]
+\newtheorem{secgame}{Attack Game}[chapter]
+
+\begin{document}
+
+\newcommand\Title{Privacy-Preserving Contact Discovery with Applications to End-to-End Encrypted Messaging and Mobile-First Cryptocurrencies}
+\newcommand\Author{Nicolas Mohnblatt}
+\newcommand\Supervisor{Dr. Philipp Jovanovic}
+\newcommand\Degree{MSc in Information Security}
+
+
+\onehalfspacing
+\input{title}
+\maketitleucl
+
+% IMPORT SECTIONS
+\input{abstract}
+\input{acknowledgements}
+\hypersetup{linkcolor=black} % Change link colour for TOC
+\setcounter{tocdepth}{1}
+%{\singlespacing \tableofcontents} % TOC in single spacing
+\tableofcontents
+\hypersetup{linkcolor=blue} % Change back link colour
+
+
+\input{intro}
+% \input{design}
+\input{litreview}
+\input{background}
+\input{system}
+\input{implementation}
+\input{conclusion}
+\input{appendices}
+\input{code}
+
+
+% BIBLIOGRAPHY
+\newpage
+\addcontentsline{toc}{chapter}{Bibliography}
+\bibliographystyle{splncs03}
+\bibliography{references}
+
+\end{document}

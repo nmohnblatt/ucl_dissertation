@@ -1,0 +1,139 @@
+\chapter{Background}
+\label{chap:background}
+
+\newcommand{\Gzero}{\ensuremath{\mathbb{G}_0}}
+\newcommand{\Gone}{\ensuremath{\mathbb{G}_1}}
+\newcommand{\Gt}{\ensuremath{\mathbb{G}_T}}
+\newcommand{\Keygen}{\ensuremath{\mathsf{KeyGen}}}
+\newcommand{\Sign}{\ensuremath{\mathsf{Sign}}}
+\newcommand{\Verif}{\ensuremath{\mathsf{Verify}}}
+\newcommand{\Pair}[2]{e\left(#1, #2 \right)}
+
+\paragraph{} Before we introduce our system, we recall some definitions of lesser known cryptographic primitives and assumptions. Our aim is to provide the necessary technical background to then discuss our system's architecture. Alternatively, readers may proceed to \autoref{chap:system} and refer back to this section when needed.
+
+
+
+
+\section{Bilinear pairings}
+
+\paragraph{} The following definition for a \textit{pairing} is that provided by Boneh and Shoup in \textit{A Graduate Course in Applied Cryptography} \cite{BonehShoup}. To remain consistent with the source text, group operations are represented multiplicatively.
+
+\begin{definition}[Pairing \cite{BonehShoup}]
+\label{def:pairing}
+	Let $\Gzero, \Gone, \Gt$ be three cyclic groups of prime order $q$ where $g_0 \in \Gzero$ and $g_1 \in \Gone$ are generators. A \textbf{pairing} is an \underline{efficiently computable} function $e : \Gzero \times \Gone \rightarrow \Gt$ satisfying the following properties:
+	
+		\begin{enumerate}
+			\item bilinear: for all $u,u' \in \Gzero$ and $v,v' \in \Gone$ we have
+				$$
+					e(u \cdot u', v) = e(u,v) \cdot e(u',v) \qquad and \qquad e(u, v \cdot v') = e(u,v) \cdot e(u',v)
+				$$
+				
+			\item non-degenerate: $e(g_0, g_1)$ is a generator of $\Gt$
+		\end{enumerate}
+		
+	When $\Gzero = \Gone$, we say that the pairing is a \textbf{symmetric pairing}. When $\Gzero \neq \Gone$, we say that the pairing is an \textbf{asymmetric pairing}. We refer to $\Gzero$ and $\Gone$ as the \textbf{pairing groups}, or source groups, and refer to $\Gt$ as the \textbf{target group}.
+\end{definition}
+
+\paragraph{} From the bilinear property, we can derive the following equality which is central to our scheme:
+
+\begin{equation}
+	\label{eq:pairing}
+	\forall \alpha, \beta \in \mathbb{Z}_q, \; e({g_0}^\alpha, {g_1}^\beta) = e({g_0}, {g_1})^{\alpha\beta} =e({g_0}^\beta, {g_1}^\alpha)
+\end{equation}
+
+\paragraph{Hard Problems in Pairing Groups --} The existence of pairings has direct consequences on the discrete logarithm, the decisional Diffie-Hellman (DDH) and the computational Diffie-Hellman (CDH) assumptions. We summarise these in \autoref{table:problems} below.
+
+\begin{table}[H]
+	\begin{center}
+  		\begin{tabularx}{\linewidth}{l|X|X}
+    			& \textbf{Symmetric Pairing} & \textbf{Asymmetric Pairing} \\
+    			& $e : \Gzero \times \Gzero \rightarrow \Gt $ & $e : \Gzero \times \Gone \rightarrow \Gt $\\
+    		\hline
+    		\textbf{Discrete Logarithm} & No harder in $\Gzero$ than in $\Gt$& No harder in $\Gzero$ or $\Gone$ than in $\Gt$ \\
+    		\hline
+    		\textbf{Decisional DH}& Easy to solve in $\Gzero$, assumed to hold in $\Gt$& Assumed to be hard in $\Gzero$, $\Gone$ and $\Gt$\\
+    		\hline
+    		\textbf{Computational DH} & Assumed to be hard in $\Gzero$ and $\Gt$ & Assumed to be hard in $\Gzero$, $\Gone$ and $\Gt$
+  		\end{tabularx}
+  		\caption{Summary table of classic cryptographic problems under pairings}
+  		\label{table:problems}
+  \end{center}
+\end{table}
+
+\noindent There exist variants of the DDH and CDH assumptions that take into account the pairing operation: the decisional variant is known as the decision Bilinear Diffie-Hellman (DBDH) assumption and the computational variant is known as the co-Computational Diffie-Hellman (co-CDH) assumption. We provide formal definitions for both of the assumptions in \autoref{ap:coCDH}.
+
+%TODO ref for implementation
+\paragraph{Implementation --} Pairings have been implemented in practice on certain pairing-friendly elliptic curves. While the underlying constructions are outside of the scope of this project, we wish to emphasise a few of their features. In asymmetric pairings, the group $\Gzero$ is usually built upon a finite field, while groups $\Gone$ and $\Gt$ are built on extensions of that field \cite{BonehShoup}. This implies that elements in $\Gzero$ have a shorter representation than those in $\Gone$ or $\Gt$. Furthermore, operations in $\Gzero$ are less computationally intensive. Finally, a pairing operation is much more computationally intensive than exponentiation in any of the three groups \cite{BonehShoup}.
+
+\section{BLS signatures}
+
+\paragraph{} One application for pairings is to create deterministic and homomorphic signature schemes such as the one introduced by Boneh, Lynn and Shacham \cite{BLS} -- named BLS after all three of the authors. In this scheme, signatures are elements of one source group and public keys are elements of the other. Although we will make use of both variants, we only present the variant in which signatures are elements of $\Gzero$ and public keys are elements of $\Gone$. Once again we write group operations multiplicatively to remain consistent with the source material.
+
+
+\begin{definition}[BLS Signatures \cite{BLS}]
+	A BLS signature scheme $\mathcal{S}_{BLS}$ is composed of three efficient algorithms $\Keygen, \Sign, \Verif$. Let $H_0$ a cryptographic hash function defined as $H_0: \{0,1\}^* \rightarrow \mathbb{G}_0$, and ``$\sample$'' denote the ``choose uniformly at random'' operator, we define the three algorithms as:
+	\begin{quote}
+		$\Keygen(\kappa):$ Choose $q$, a prime of $\kappa$-bits and three cyclic groups $\Gzero, \Gone, \Gt$ of order $q$ such that there exists a pairing $e : \Gzero \times \Gone \rightarrow \Gt$ (see definition \autoref{def:pairing}). $g_0 \in \Gzero$ and $g_1 \in \Gone$ are generators. Choose uniformly at random $x \sample \mathbb{Z}_q^* $ and set the secret key $\sk \leftarrow x$ and the public key $\pk \leftarrow {g_1}^x$. Output $\sk$ to the message signer and $\pk$ to the receiver. \\
+		$\Sign(\sk, m)$: Output the signature $\sigma = H_0(m)^\sk$. \\
+		$\Verif(\sigma, m, \pk)$: If $e(\sigma, g_1) = e(H_0(m), \pk)$ accept the signature. Otherwise reject.
+	\end{quote}
+
+\end{definition} 
+
+\begin{theorem}[Security of BLS Signatures \cite{BonehShoup}]
+	Let $e : \Gzero \times \Gone \rightarrow \Gt$ be a pairing, let $\mathcal{M}$ be the message space and let $H: \mathcal{M} \rightarrow \Gzero$ be a hash function. Then the derived BLS signature scheme is \textbf{existentially unforgeable under chosen message attacks} assuming the co-Computational Diffie-Hellman assumption\footnote{see \autoref{ap:coCDH}} holds for $e$, and $H$ is modelled as a random oracle.
+\end{theorem} 
+
+\paragraph{} Blind and/or threshold variants of this scheme exist. The former allows to hide the original message from the signer, while the latter allows to hide the complete signature from any individual (non-colluding) signer.
+
+
+
+
+\section{Left/Right constrained pseudorandom functions}
+
+\paragraph{} Left/right constrained pseudorandom functions were first introduced by Boneh and Waters \cite{LRPRF}. These pseudorandom functions (PRFs) are evaluated over a pair of inputs $x,y$ with a random key $k$ -- we denote the output value as $F(k, (x,y))$. These functions can then be ``constrained'' to their left or their right input using \textit{constraining keys}: knowing the left constraining key for a specific value $w$ allows to compute $F(k, (w,y))$ at all points $y$ with no knowledge of $k$. Similarly, the right constraining key for a value $w$ allows to compute $F(k, (x,w))$ at all points $x$ with no knowledge of $k$. Left/right PRFs are formally defined in \cite{LRPRF} as:
+
+\begin{definition}[Left/right constrained PRF \cite{LRPRF}]
+	Let $F: \mathcal{K} \times \mathcal{X}^2 \rightarrow \mathcal{Y}$ be a PRF. For all $w \in \mathcal{X}$ we wish to support constrained keys $k_{w, \mathrm{LEFT}}$ that enable the evaluation of $F(k, (x,y))$ at all points $(w,y)\in \mathcal{X}^2$, that is, at all points in which the left side is fixed to $w$. In addition, we want constrained keys $k_{w,\mathrm{RIGHT}}$ that fix the right hand side of $(x,y)$ to $w$. More precisely, for an element $w \in \mathcal{X}$ define the two predicates $p_w^{(L)}, p_w^{(R)}: \mathcal{X}^2 \rightarrow \{0,1\}$ as
+	
+	$$
+		p_w^{(L)}(x,y) = 1 \iff x = w \quad \mathrm{and} \quad p_w^{(R)}(x,y) = 1 \iff y = w 
+	$$
+	
+	We say that $F$ supports left/right fixing if it is constrained with respect to the set of predicates
+	$$
+		P_{LR}=\left\{ p_w^{(L)}, p_w^{(R)}: w\in \mathcal{X} \right\}
+	$$
+	
+\end{definition}
+
+\paragraph{Security -- } A left/right constrained PRF is said to be secure if for all probabilistic polynomial time adversaries, the output of the PRF is indistinguishable with a non-negligible advantage from an element chosen uniformly at random in the output domain.
+
+\paragraph{Implementation --} \label{leftright} Boneh and Waters \cite{LRPRF} present a secure left/right constrained PRF construction under the random oracle model by making use of a symmetric pairing. Here we present a variant that makes use of asymmetric pairings. Let $\Gzero, \Gone, \Gt$ be three cyclic groups of prime order $q$ such that there exists a pairing $e : \Gzero \times \Gone \rightarrow \Gt$. Let $H_0: \{0,1\}^* \rightarrow \Gzero$ and $H_1: \{0,1\}^* \rightarrow \Gone$ be two hash functions modelled as random oracles. For a random key $k$, we define the left/right constrained PRF $F$ as:
+\begin{equation}
+	F(k, (x,y)) = e(H_0(x), H_1(y))^k
+\end{equation}
+
+For $w \in \{0,1\}^*$, the constraining keys for the predicates $p_w^{(L)}$ and  $p_w^{(R)}$ are:
+\begin{equation}
+\label{eq:constrkeys}
+	k_{w,\mathrm{LEFT}} = H_0(w)^k \quad \mathrm{and} \quad k_{w,\mathrm{RIGHT}} = H_1(w)^k
+\end{equation}
+
+Using the bilinear property of the pairing, we can check that knowing $k_{w,\mathrm{LEFT}}$ allows to evaluate $F(k, (w,y))$ for all $y \in \{0,1\}^*$:
+\begin{equation}
+	e(k_{w,\mathrm{LEFT}}, H_1(y)) = e(H_0(w)^k, H_1(y)) = e(H_0(w), H_1(y))^w = F(k, (w,y))
+\end{equation}
+
+\noindent A similar equality can be written to check that $k_{w,\mathrm{RIGHT}}$ allows to evaluate $F(k, (x,w))$ for all $x \in \{0,1\}^*$ by computing $\Pair{H_0(x)}{k_{w,\mathrm{RIGHT}}}$.
+
+
+\paragraph{} Notice that left/right constrained PRFs and BLS signatures are closely related. Indeed they both make use of the same underlying pairing construction. Furthermore, BLS signatures take the same form as a constraining key, namely a group element raised to an unknown power.
+
+
+
+
+
+
+
+
