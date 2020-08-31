@@ -1,13 +1,6 @@
 \chapter{Background}
 \label{chap:background}
 
-\newcommand{\Gzero}{\ensuremath{\mathbb{G}_0}}
-\newcommand{\Gone}{\ensuremath{\mathbb{G}_1}}
-\newcommand{\Gt}{\ensuremath{\mathbb{G}_T}}
-\newcommand{\Keygen}{\ensuremath{\mathsf{KeyGen}}}
-\newcommand{\Sign}{\ensuremath{\mathsf{Sign}}}
-\newcommand{\Verif}{\ensuremath{\mathsf{Verify}}}
-\newcommand{\Pair}[2]{e\left(#1, #2 \right)}
 
 \paragraph{} Before we introduce our system, we recall some definitions of lesser known cryptographic primitives and assumptions. Our aim is to provide the necessary technical background to then discuss our system's architecture. Alternatively, readers may proceed to \autoref{chap:system} and refer back to this section when needed.
 
@@ -71,9 +64,9 @@
 
 
 \begin{definition}[BLS Signatures \cite{BLS}]
-	A BLS signature scheme $\mathcal{S}_{BLS}$ is composed of three efficient algorithms $\Keygen, \Sign, \Verif$. Let $H_0$ a cryptographic hash function defined as $H_0: \{0,1\}^* \rightarrow \mathbb{G}_0$, and ``$\sample$'' denote the ``choose uniformly at random'' operator, we define the three algorithms as:
+	A BLS signature scheme $\mathcal{S}_{BLS}$ is composed of three efficient algorithms $\Keygen, \Sign, \Verif$. Let $\Gzero, \Gone, \Gt$ be three cyclic groups of prime order $q$ such that there exists a pairing $e : \Gzero \times \Gone \rightarrow \Gt$. $g_0 \in \Gzero$ and $g_1 \in \Gone$ are generators. Let $H_0$ a cryptographic hash function defined as $H_0: \{0,1\}^* \rightarrow \mathbb{G}_0$, and ``$\sample$'' denote the ``choose uniformly at random'' operator, we define the three algorithms as:
 	\begin{quote}
-		$\Keygen(\kappa):$ Choose $q$, a prime of $\kappa$-bits and three cyclic groups $\Gzero, \Gone, \Gt$ of order $q$ such that there exists a pairing $e : \Gzero \times \Gone \rightarrow \Gt$ (see definition \autoref{def:pairing}). $g_0 \in \Gzero$ and $g_1 \in \Gone$ are generators. Choose uniformly at random $x \sample \mathbb{Z}_q^* $ and set the secret key $\sk \leftarrow x$ and the public key $\pk \leftarrow {g_1}^x$. Output $\sk$ to the message signer and $\pk$ to the receiver. \\
+		$\Keygen:$ Choose uniformly at random $x \sample \mathbb{Z}_q^* $ and set the secret key $\sk \leftarrow x$ and the public key $\pk \leftarrow {g_1}^x$. Output $\sk$ to the message signer and $\pk$ to the receiver. \\
 		$\Sign(\sk, m)$: Output the signature $\sigma = H_0(m)^\sk$. \\
 		$\Verif(\sigma, m, \pk)$: If $e(\sigma, g_1) = e(H_0(m), \pk)$ accept the signature. Otherwise reject.
 	\end{quote}
