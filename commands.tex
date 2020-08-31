@@ -1,0 +1,31 @@
+
+% ENVIRONMENTS
+\newtheorem{definition}{Definition}[chapter]
+\newtheorem{theorem}{Theorem}[chapter]
+\newtheorem{secgame}{Attack Game}[chapter]
+
+
+% SHORTHAND NOTATIONS
+	% Groups
+	\newcommand{\Gzero}{\ensuremath{\mathbb{G}_0}}
+	\newcommand{\Gone}{\ensuremath{\mathbb{G}_1}}
+	\newcommand{\Gt}{\ensuremath{\mathbb{G}_T}}
+
+	% Crypto
+	\newcommand{\Keygen}{\ensuremath{\mathsf{KeyGen}}}
+	\newcommand{\Sign}{\ensuremath{\mathsf{Sign}}}
+	\newcommand{\Verif}{\ensuremath{\mathsf{Verify}}}
+	\newcommand{\msk}{\mathbf{msk}}
+	\newcommand{\mpk}{\mathbf{mpk}}
+
+
+	% Maths
+	\newcommand{\Pair}[2]{e\left(#1, #2 \right)} % Pairing operation
+	\newcommand{\keyleft}[1]{k_{#1,\mathrm{LEFT}}} % L-R PRFs
+	\newcommand{\keyright}[1]{k_{#1,\mathrm{RIGHT}}} % L-R PRFs
+
+	% Variables
+	\newcommand{\id}{\mathtt{id}}
+	\newcommand{\acc}{\mathbf{acc}}
+	\newcommand{\addr}{\mathbf{addr}}
+	\newcommand{\contacts}[1]{\mathcal{C}_{#1}}
