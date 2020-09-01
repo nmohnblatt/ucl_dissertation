@@ -100,10 +100,36 @@
 	
 \end{definition}
 
-\paragraph{Security -- } A left/right constrained PRF is said to be secure if for all probabilistic polynomial time adversaries, the output of the PRF is indistinguishable with a non-negligible advantage from an element chosen uniformly at random in the output domain.
+\paragraph{Security -- } We now provide the definition of a secure left/right constrained PRF by adapting a more general definition provided in \cite{LRPRF}.
+
+		\begin{secgame}[\cite{LRPRF}]
+		Let $F: \mathcal{K} \times \mathcal{X}^2 \rightarrow \mathcal{Y}$ be a left-right constrained PRF with respect to a set system $\mathcal{S} \subseteq 2^{\mathcal{X}^2}$. We define constrained security using the following two experiments denoted $\Exp{0}$ and $\Exp{1}$ with an adversary $\adv$. For $b=0,1$ experiment $\Exp{b}$ proceeds as follows:
+
+			A random key $k \in \mathcal{K}$ is selected and two helper sets $C,V \subseteq \mathcal{X}^2$ are initialised to $\emptyset$. The set $V \subseteq \mathcal{X}^2$ will keep track of all the points at which the adversary can evaluate $F(k, (\cdot,\cdot))$. The set $C \subseteq \mathcal{X}^2$ will keep track of all the points where the adversary has challenged. The sets $C$ and $V$ will ensure that the adversary cannot trivially decide whether challenge values are random or pseudorandom. In particular, the experiments maintain the invariant that $C \cap V = \emptyset$.
+
+The adversary is then presented with three oracles as follows:
+
+\begin{itemize}
+	\item $F.\mathrm{eval}$: given $(x,y) \in \mathcal{X}^2$ from $\adv$ if $x \notin C$ the oracle returns $F(k, (x,y))$ and otherwise returns $\bot$. The set $V$ is updated as $V\leftarrow V \cup \{(x,y)\}$.
+	\item $F.\mathrm{constrain}$: given a coordinate $w \in \mathcal{X}$ and a direction $d \in \{LEFT,RIGHT\}$ from $\adv$ we define $S$ as the set of all points $p$ such that $p = (w, \cdot)$ if $d=LEFT$ or $p = (\cdot, w)$ if $d=RIGHT$. If $S\cap C= \emptyset$ the oracle returns the constraining keys $k_{w, d}$. The set $V$ is updated $V\leftarrow V \cup S$.
+	\item $\mathrm{Challenge}$: given $(x,y)\in \mathcal{X}^2$ where $(x,y) \notin V$, if $b=0$ the adversary is given $F(k, (x,y)))$; otherwise the adversary is given a random (consistent) $z \in \mathcal{Y}$. The set $\mathcal{C}$ is updated $C \leftarrow C \cup \{(x,y)\}$.
+\end{itemize}
+			Once the adversary is done interrogating the oracles, it outputs $b' \in \{0,1\}$.\\
+			
+			\noindent For $b = 0,1$ let $W_b$ be the event that $b'=1$ in $\Exp{b}$. We define the adversary's advantage as $\mathrm{AdvPRF_{\adv, F}}(\lambda) = |\mathrm{Pr}[W_0] - \mathrm{Pr}[W_1]|$
+		\end{secgame}
+		
+		\begin{definition}[Secure left/right constrained PRF \cite{LRPRF}]
+			The PRF $F$ is a secure constrained PRF with respect to $\mathcal{S}$ if for all probabilistic
+polynomial time adversaries $\adv$ the function $\mathrm{AdvPRF}_{\adv,F}(\lambda)$ is negligible.
+		\end{definition}
+
+
+
 
 \paragraph{Implementation --} \label{leftright} Boneh and Waters \cite{LRPRF} present a secure left/right constrained PRF construction under the random oracle model by making use of a symmetric pairing. Here we present a variant that makes use of asymmetric pairings. Let $\Gzero, \Gone, \Gt$ be three cyclic groups of prime order $q$ such that there exists a pairing $e : \Gzero \times \Gone \rightarrow \Gt$. Let $H_0: \{0,1\}^* \rightarrow \Gzero$ and $H_1: \{0,1\}^* \rightarrow \Gone$ be two hash functions modelled as random oracles. For a random key $k$, we define the left/right constrained PRF $F$ as:
 \begin{equation}
+	\label{eq:LRPRF}
 	F(k, (x,y)) = e(H_0(x), H_1(y))^k
 \end{equation}
 
