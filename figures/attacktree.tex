@@ -1,0 +1,29 @@
+\begin{center}
+	
+
+\begin{forest}
+for tree={
+  draw,
+  minimum height=1cm,
+  anchor=north,
+  align=center,
+  child anchor=north
+},
+[{Learn whether $\id_B \in \contacts{A}$}, align=center, name=SS
+  [{Distinguish key-value pair\\ $(H(f_{AB}), \enc_{k_{AB}}(\pk_A || \addr_A))$\\ on online cache from random}, name=PDC
+    [{Distinguish $f_{AB}$ from random}
+    	[Break security\\ property of $F$\\ (definition \autoref{def:lrPRFsec})]
+    	[Obtain $s$]
+    	[{Obtain $A$'s\\ constraining keys}
+    		[Forge BLS signatures]
+    		[Impersonate $A$]
+    	]
+    ]
+    [Decrypt $\enc_{k_{AB}}(\pk_A || \addr_A))$
+    	[Compute $k_{AB}$]
+    ]
+  ]
+]
+\end{forest}
+
+\end{center}

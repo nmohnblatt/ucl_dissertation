@@ -1,6 +1,7 @@
 \chapter{Pairing-Based Contact Discovery}
 \label{chap:system}
 
+% TODO redo structure
 \paragraph{} In this chapter we present the architecture for our contact discovery service (\autoref{sec:architecture}). We then provide outlines of security proofs (\autoref{sec:security}), theoretical performance evaluations (\autoref{sec:performance}) and show how our system maps onto real-world applications such as end-to-end encrypted messaging and mobile-first cryptocurrencies (\autoref{sec:applications}).
 
 
@@ -33,7 +34,7 @@
 		\noindent We make a brief aside to clarify the actors and assets present in our scheme:		
 		\begin{itemize}
 			\item \textbf{Users:} each user $A$ holds an opaque account identifier $\acc_A$, an address $\addr_A$, a key pair $(\sk_A,\pk_A)$, a discovery identifier $\id_A$ and an address book $\contacts{A}$ (see \autoref{sec:probstatement}). We denote $\mathcal{ID}$ the set of all existing discovery identifiers.
-			\item \textbf{Discovery Service:} the discovery service $S$ may be a central or distributed entity. In the centralised version, the discovery service holds a master secret key $\msk$. In the distributed version, we denote the set of all servers as $\mathcal{S}$ and the $i$-th server as $S_i$. Each server holds a share of the master secret key $\msk_i$. Furthermore, in both versions, each server holds a list of tuples $(\acc, \pk)$ for all registered users.
+			\item \textbf{Discovery Service:} the discovery service is a distributed entity. We denote the set of all servers as $\mathcal{S}$ and the $i$-th server as $S_i$. Each server holds a share $s_i$ of a master secret key $s$. Furthermore, each server holds a list of tuples $(\acc, \pk)$ for all registered users.
 			\item \textbf{Online Cache:} the online cache may be operated by the discovery scheme or by a third party and is assumed to be untrusted. Its role is to manage key-value pairs.
 			
 			\end{itemize}
@@ -42,43 +43,44 @@
 		\begin{itemize}
 			\item $\Gzero, \Gone, \Gt$ are three cyclic groups of prime order $q$ such that there exists a pairing $e : \Gzero \times \Gone \rightarrow \Gt$.
 			\item $H_0: \mathcal{ID}\rightarrow \Gzero$  and $H_1: \mathcal{ID} \rightarrow \Gone$ are two public hash functions modelled as random oracles.
-			\item $F: \mathcal{ID}^2 \times \mathbb{Z}_q \rightarrow \Gt$ is a left/right constrained PRF defined as: \begin{equation}
+			\item $F: \mathbb{Z}_q \times \mathcal{ID}^2  \rightarrow \Gt$ is a left/right constrained PRF defined as: \begin{equation}
 				F(k, (\id_A, \id_B)) = F_k(\id_A, \id_B)= \Pair{H_0(\id_A)}{H_1(\id_B)}^k
 			\end{equation}
 			\item $\mathbf{KDF}$ is a public, deterministic key derivation function.
 			\item $\Sign$ and $\Verif$ are the two algorithms of a probabilistic and secure signature scheme which makes use of the third-party provided user keys $(\sk_A,\pk_A)$ 
-			\item The master secret key $\msk$ is set to an integer $s \in \mathbb{Z}_q$ chosen uniformly at random. We define two corresponding master public keys $\mpk_0 = {g_0}^s$ and $\mpk_1 = {g_1}^s$. In the distributed variant, we assume that the master secret key is shared according to a secure $t$-out-of-$n$ secret sharing scheme and that no single entity holds the master secret key.
+			\item The master secret key is set to an integer $s \in \mathbb{Z}_q$ chosen uniformly at random. We define two corresponding master public keys ${g_0}^s$ and ${g_1}^s$, for which there exists $i$ public shares denoted as ${g_0}^{s_i}$ and ${g_1}^{s_i}$ respectively.
+			\item Let $n$ the number of servers ($n=|\mathcal{S}|$)) and $t$ a fixed threshold such that $1 \leq t \leq n$, we assume that the master secret key is shared according to a secure $t$-out-of-$n$ secret sharing scheme and that no single entity holds the master secret key.
 		\end{itemize}
 
 	\subsection{Key derivation}
 	
 		\paragraph{} We first introduce the essential key derivation step. In doing so, we provide the reader with the necessary material to understand the security constraints under which the initial setup phase operates.
 		
-		\paragraph{} For all users $B$ such that $\id_B \in \mathcal{C}_A$, user $A$ can compute shared key material with $B$ by evaluating $F_\msk(\id_A, \id_B)$ and $F_\msk(\id_B, \id_A)$. From the definition of left/right constrained PRFs, $A$ can do so with the constraining keys $\keyleft{\id_A}$ and $\keyright{\id_A}$:
+		\paragraph{} For all users $B$ such that $\id_B \in \mathcal{C}_A$, user $A$ can compute shared key material with $B$ by evaluating $F_s(\id_A, \id_B)$ and $F_s(\id_B, \id_A)$. From the definition of left/right constrained PRFs, $A$ can do so with the constraining keys $\keyleft{\id_A}$ and $\keyright{\id_A}$:
 		\begin{align}
-			s_{AB} = F_\msk(\id_A, \id_B) &= \Pair{\keyleft{\id_A}}{H_1(\id_B)} \\
-			s_{BA} = F_\msk(\id_B, \id_A) &= \Pair{H_0(\id_B)}{\keyright{\id_A}}
+			f_{AB} = F_s(\id_A, \id_B) &= \Pair{\keyleft{\id_A}}{H_1(\id_B)} \\
+			f_{BA} = F_s(\id_B, \id_A) &= \Pair{H_0(\id_B)}{\keyright{\id_A}}
 		\end{align} 
 	
 	\noindent Similarly, $B$ can evaluate $F$ at the same points using the constraining keys $\keyleft{\id_B}$ and $\keyright{\id_B}$:		
 		\begin{align}
-			s_{AB} = F_\msk(\id_A, \id_B) &= \Pair{H_0(\id_A)}{\keyright{\id_B}} \\
-			s_{BA} = F_\msk(\id_B, \id_A) &= \Pair{\keyleft{\id_B}}{H_1(\id_A)} 
+			f_{AB} = F_s(\id_A, \id_B) &= \Pair{H_0(\id_A)}{\keyright{\id_B}} \\
+			f_{BA} = F_s(\id_B, \id_A) &= \Pair{\keyleft{\id_B}}{H_1(\id_A)} 
 		\end{align}
 	
 \noindent Using this key material, $A$ and $B$ can establish a symmetric secret key using a standardised key derivation function:
 	\begin{equation}
-		k_{AB} = k_{BA} = \mathbf{KDF}\left(s_{AB} \xor s_{BA}\right)
+		k_{AB} = k_{BA} = \mathbf{KDF}\left(f_{AB} \xor f_{BA}\right)
 	\end{equation}
 	
 	\paragraph{A note on security --} The constraining keys $\keyleft{\id_A}$ and $\keyright{\id_A}$ allow to compute every symmetric key that $A$ may establish with her contacts. As such, those \textbf{constraining keys must remain private} to $A$. The consequences of a leak range from impersonation to a total leak of $A$'s address book and are further detailed in \autoref{sec:security}.
 	
 	\subsection{Discovery}
 	
-		\paragraph{} Using their shared key material $(k_{AB}, s_{AB}, s_{BA})$, users $A$ and $B$ can determine secret memory locations on the online cache to leave an encrypted message for each other. Let $(\enc$, $\dec)$ be a secure symmetric encryption scheme and $H$ a hash function modelled as a random oracle, we define two cache operations $\mathbf{Write}$ and $\mathbf{Read}$:
+		\paragraph{} Using their shared key material $(k_{AB}, f_{AB}, f_{BA})$, users $A$ and $B$ can determine secret memory locations on the online cache to leave an encrypted message for each other. Let $(\enc$, $\dec)$ be a secure symmetric encryption scheme and $H$ a hash function modelled as a random oracle, we define two cache operations $\mathbf{Write}$ and $\mathbf{Read}$:
 		\begin{itemize}
-			\item $\mathbf{Write}$: store the key-value pair $(H(s_{AB}), \enc_{k_{AB}}(\pk_A || \addr_A))$ on the online cache.
-			\item $\mathbf{Read}$: retrieve the key-value pair $(H(s_{BA}), c_{BA})$. If $B$ has already run the discovery phase of our scheme then $c_{BA} = \enc_{k_{BA}}(\pk_B||\addr_B)$. Decrypt $c_{BA}$ using the key $k_{AB} = k_{BA}$.
+			\item $\mathbf{Write}$: store the key-value pair $(H(f_{AB}), \enc_{k_{AB}}(\pk_A || \addr_A))$ on the online cache.
+			\item $\mathbf{Read}$: retrieve the key-value pair $(H(f_{BA}), c_{BA})$. If $B$ has already run the discovery phase of our scheme then $c_{BA} = \enc_{k_{BA}}(\pk_B||\addr_B)$. Decrypt $c_{BA}$ using the key $k_{AB} = k_{BA}$.
 		\end{itemize}
 	
 	\subsection{Setup}
@@ -86,25 +88,25 @@
 		
 		\paragraph{}  The setup stage serves to provide user $A$ with the constraining keys $k_{\id_A,\mathrm{LEFT}}$ and $k_{\id_A,\mathrm{RIGHT}}$. Consequently, the setup is a security-critical task. As we have shown in \autoref{eq:constrkeys}, under our construction of $F$ the constraining keys can be expressed as:
 		\begin{equation}
-			k_{\id_A,\mathrm{LEFT}} = H_0(\id_A)^\msk \quad \mathrm{and} \quad k_{\id_A,\mathrm{RIGHT}} = H_1(\id_A)^\msk
+			k_{\id_A,\mathrm{LEFT}} = H_0(\id_A)^s \quad \mathrm{and} \quad k_{\id_A,\mathrm{RIGHT}} = H_1(\id_A)^s
 		\end{equation}
 		
-		\noindent These constraining keys are equivalent to BLS signatures on $\id_A$ by the discovery service. Notice that the service needs to produce signatures under both variants of the BLS scheme: one with signatures in $\Gzero$ and one with signatures in $\Gone$.
+		\noindent These constraining keys are equivalent to BLS signatures on $\id_A$ by at least $t$ out of $n$ servers of the discovery service. Notice that the service needs to produce signatures under both variants of the BLS scheme: one with signatures in $\Gzero$ and one with signatures in $\Gone$.
 				
-		\paragraph{} The setup protocol in the centralised variant between user $A$ and the server $S$ is described as follows:
+		\paragraph{} The setup protocol between user $A$ and a server $S_i$ is described as follows:
 		\begin{enumerate}
-			\item $A$ chooses a random blinding factor $\alpha \sample \mathbb{Z}_q$ and sends $\acc_A$, $\mathbf{sig}_A = \Sign(\sk_A, \acc_A)$, $H_0(\id_A)^\alpha$, $H_1(\id_A)^\alpha$ to $S$.
-			\item Upon reception of $A$'s request, $S$ retrieves the associated public key and checks that the signature $\mathbf{sig_A}$ is valid:
+			\item $A$ chooses a random blinding factor $\alpha \sample \mathbb{Z}_q$ and sends $\acc_A$, $\mathbf{sig}_A \leftarrow \Sign(\sk_A, \acc_A)$, $H_0(\id_A)^\alpha$, $H_1(\id_A)^\alpha$ to $S_i$.
+			\item Upon reception of $A$'s request, $S_i$ retrieves the associated public key and checks that the signature $\mathbf{sig_A}$ is valid:
 			\begin{equation}
 				\Verif(\pk_A, \acc_A, \mathbf{sig}_A) = 1
 			\end{equation}
-		\item If the check succeeds, $S$ sends $(H_0(\id_A)^\alpha)^\msk$ and $(H_1(\id_A)^\alpha)^\msk$ to $A$
-		\item $A$ checks the following equalities:
+		\item If the check succeeds, $S_i$ sends $(H_0(\id_A)^\alpha)^{s_i}$ and $(H_1(\id_A)^\alpha)^{s_i}$ to $A$
+		\item Using $S_i$'s public key shares $({g_0}^{s_i}, {g_1}^{s_i})$, $A$ checks the following equalities:
 		\begin{align}
-			\Pair{(H_0(\id_A)^\alpha)^\msk}{g_0} &= \Pair{H_0(\id_A)^\alpha}{\mpk_0} \\
-			\Pair{g_1}{(H_1(\id_A)^\alpha)^\msk} &= \Pair{\mpk_1}{H_1(\id_A)^\alpha}
+			\Pair{(H_0(\id_A)^\alpha)^{s_i}}{g_0} &= \Pair{H_0(\id_A)^\alpha}{{g_0}^{s_i}} \\
+			\Pair{g_1}{(H_1(\id_A)^\alpha)^{s_i}} &= \Pair{{g_1}^{s_i}}{H_1(\id_A)^\alpha}
 		\end{align}
-		\item If the checks succeed (in other words, if $A$ receives valid signatures from the service), $A$ removes the blinding factor $\alpha$ to obtain $H_0(\id_A)^\msk$ and $H_1(\id_A)^\msk$.
+		\item If the checks succeed (in other words, if $A$ receives valid signatures from the service), $A$ removes the blinding factor $\alpha$ to obtain $H_0(\id_A)^{s_i}$ and $H_1(\id_A)^{s_i}$.
 		\end{enumerate}
 		
 		
@@ -117,22 +119,61 @@
 %		\<\< \text{If } \Verif(\pk_A, \acc_A, \mathbf{sig}_A) = 0 \\
 %		\<\< \qquad\textbf{Abort}\\
 %		\<\< \text{Else}\\
-%		\< \sendmessageleft{top={$(H_0(\id_A)^\alpha)^\msk, (H_1(\id_A)^\alpha)^\msk$}} 
+%		\< \sendmessageleft{top={$(H_0(\id_A)^\alpha)^s, (H_1(\id_A)^\alpha)^s$}} 
 % }
 % }
 	
-	\paragraph{} The distributed version of the setup protocol is almost identical in every way: $A$ interacts as above with each server $S_i$ to obtain shares of her constraining keys $H_0(\id_A)^{\msk_i}$ and $H_0(\id_A)^{\msk_i}$. With enough shares, $A$ can run the recover algorithm from the sharing scheme to compute $H_0(\id_A)^\msk$ and $H_1(\id_A)^\msk$.
+	\paragraph{} $A$ repeats the above procedure with at least $t$ servers, using a new blinding factor for each server. Using the obtained signature shares, $A$ can recover the full signatures $H_0(\id_A)^s$ and $H_1(\id_A)^s$.
 	
 	
 
 
-\section{Security}
+\section{Privacy}
 \label{sec:security}
 
 
-\paragraph{} We will now evaluate the security of our scheme. At first, we work under the assumption that discovery identifiers are correctly linked to the users that own them. We then discuss ways in which this assumption can be upheld in practice.
+\paragraph{} We will now evaluate the privacy guarantees of our scheme when there are strictly less than $t$ malicious servers. At first, we work under the assumption that discovery identifiers are correctly linked to the users who own them. We then discuss ways in which this assumption can be upheld in practice.
 
-	\subsection{Outlines of security proofs}
+
+
+
+
+	\subsection{Threat model}
+	\paragraph{} An adversary $\Tadv$ wishing to break our scheme's privacy property aims to gain information about the contents of any user's address book. This goal is equivalent to determining whether $\id_B \in \contacts{A}$ for any user $A$ and any identifier $\id_B$ that is not owned by $\Tadv$. $\Tadv$ is characterised as:
+	\begin{itemize}
+		\item having access to all public information.
+		\item having access to the present and past states of the online cache.
+		\item may eavesdrop on any communication between the users, servers and online cache.
+		\item may spawn any number of users for which $\Tadv$ owns the discovery identifier.
+		\item may control up to $t-1$ servers in the discovery service.
+	\end{itemize}
+	
+	
+	\paragraph{} To guide our analysis, we provide an attack tree\footnote{as defined by Schneier \cite{attacktree}} against the privacy property of our scheme in \autoref{fig:attacktree}. The root node represents the attacker's goal and each child node represents an option to solve the problem indicated in the parent node. Consequently leaf nodes represent the attacker's entry points. We will therefore consider each leaf and show that our scheme is protected against these attacks.
+	
+	
+		\begin{figure}[H]
+			\begin{center}
+				\input{figures/attacktree}
+				\caption{Attack tree against our discovery scheme. Branches represent ``OR'' statements}
+				\label{fig:attacktree}
+			\end{center}
+		\end{figure}
+
+	
+	
+%		\paragraph{} Our scheme reduces the contact discovery problem to the evaluation of a left/right constrained PRF at two specific points, namely $(\id_A, \id_B)$ and $(\id_B, \id_A)$. Indeed an adversary trying to uncover a link between users $A$ and $B$ without computing their shared key material will face two obvious hurdles. Firstly, such an adversary will be unable to find $A$ and $B$'s meeting point on the online cache other than by exhaustively iterating through all possible location. Furthermore, since $H$ is modelled as a random oracle, this adversary will be unable to distinguish this location from any other. The second issue is that the value stored in that location is encrypted under $k_{AB}$. Therefore, to uncover the link between $A$ and $B$, an adversary will need to evaluate the left/right constrained PRF at the correct points.
+		
+		
+%		\paragraph{} We provide a formal definition of secure left/right constrained PRFs by using an attack game. We will then show that the construction used in our scheme meets the security definition.
+		
+		
+		
+		\begin{theorem}
+			The PRF $F$ defined as $F(k, (x,y)) = \Pair{H_0(x)}{H_1(y)}^k$ is a secure constrained PRF with respect to its constraining keys assuming the decisional bilinear Diffie-Hellman assumption holds for $e$ and the functions $H_0$ and $H_1$ are modelled as random oracles.
+		\end{theorem}
+		
+
 
 	\subsection{Consequences of a breach}
 	
