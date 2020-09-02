@@ -47,7 +47,8 @@
 				F(k, (\id_A, \id_B)) = F_k(\id_A, \id_B)= \Pair{H_0(\id_A)}{H_1(\id_B)}^k
 			\end{equation}
 			\item $\mathbf{KDF}$ is a public, deterministic key derivation function.
-			\item $\Sign$ and $\Verif$ are the two algorithms of a probabilistic and secure signature scheme which makes use of the third-party provided user keys $(\sk_A,\pk_A)$ 
+			\item $\BTBLS$ and blind $(t,n)$-threshold BLS signature scheme (see definition \autoref{def:BTBLS}). We denote this scheme's algorithms as $\BTBLS . \Keygen$, $\BTBLS . \Sign$, \textit{etc...} 
+			\item $\mathsf{SIG}$ strong existentially unforgeable signature scheme which makes use of the third-party provided user keys $(\sk_A,\pk_A)$ and is composed of algorithms $\SIG . \Sign$ and $\SIG . \Verif$.
 			\item The master secret key is set to an integer $s \in \mathbb{Z}_q$ chosen uniformly at random. We define two corresponding master public keys ${g_0}^s$ and ${g_1}^s$, for which there exists $i$ public shares denoted as ${g_0}^{s_i}$ and ${g_1}^{s_i}$ respectively.
 			\item Let $n$ the number of servers ($n=|\mathcal{S}|$)) and $t$ a fixed threshold such that $1 \leq t \leq n$, we assume that the master secret key is shared according to a secure $t$-out-of-$n$ secret sharing scheme and that no single entity holds the master secret key.
 		\end{itemize}
@@ -70,7 +71,7 @@
 	
 \noindent Using this key material, $A$ and $B$ can establish a symmetric secret key using a standardised key derivation function:
 	\begin{equation}
-		k_{AB} = k_{BA} = \mathbf{KDF}\left(f_{AB} \xor f_{BA}\right)
+		k_{AB} = k_{BA} = \mathbf{KDF}\left(f_{AB} \xor f_{BA}\right) = \mathbf{KDF}(f_{BA} \xor f_{AB})
 	\end{equation}
 	
 	\paragraph{A note on security --} The constraining keys $\keyleft{\id_A}$ and $\keyright{\id_A}$ allow to compute every symmetric key that $A$ may establish with her contacts. As such, those \textbf{constraining keys must remain private} to $A$. The consequences of a leak range from impersonation to a total leak of $A$'s address book and are further detailed in \autoref{sec:security}.
@@ -82,33 +83,41 @@
 			\item $\mathbf{Write}$: store the key-value pair $(H(f_{AB}), \enc_{k_{AB}}(\pk_A || \addr_A))$ on the online cache.
 			\item $\mathbf{Read}$: retrieve the key-value pair $(H(f_{BA}), c_{BA})$. If $B$ has already run the discovery phase of our scheme then $c_{BA} = \enc_{k_{BA}}(\pk_B||\addr_B)$. Decrypt $c_{BA}$ using the key $k_{AB} = k_{BA}$.
 		\end{itemize}
+		
+		\paragraph{} Using these two operations, $A$ is able to leave a message for $B$ to find ($\mathbf{Write}$) and check whether $B$ has previously completed the contact matching process ($\mathbf{Read}$ at the address $H(f_{BA})$). Furthermore, after $B$ has completed the process, $A$ obtains the required information to set up an end-to-end encrypted channel.
 	
 	\subsection{Setup}
 	\label{sec:setup}
 		
-		\paragraph{}  The setup stage serves to provide user $A$ with the constraining keys $k_{\id_A,\mathrm{LEFT}}$ and $k_{\id_A,\mathrm{RIGHT}}$. Consequently, the setup is a security-critical task. As we have shown in \autoref{eq:constrkeys}, under our construction of $F$ the constraining keys can be expressed as:
+		\paragraph{}  The setup stage serves to provide user $A$ with the constraining keys $k_{\id_A,\mathrm{LEFT}}$ and $k_{\id_A,\mathrm{RIGHT}}$. Consequently, setup is a security-critical task. As we have shown in \autoref{eq:constrkeys}, under our construction of $F$ the constraining keys can be expressed as:
 		\begin{equation}
 			k_{\id_A,\mathrm{LEFT}} = H_0(\id_A)^s \quad \mathrm{and} \quad k_{\id_A,\mathrm{RIGHT}} = H_1(\id_A)^s
 		\end{equation}
 		
 		\noindent These constraining keys are equivalent to BLS signatures on $\id_A$ by at least $t$ out of $n$ servers of the discovery service. Notice that the service needs to produce signatures under both variants of the BLS scheme: one with signatures in $\Gzero$ and one with signatures in $\Gone$.
-				
+		
+		
 		\paragraph{} The setup protocol between user $A$ and a server $S_i$ is described as follows:
 		\begin{enumerate}
-			\item $A$ chooses a random blinding factor $\alpha \sample \mathbb{Z}_q$ and sends $\acc_A$, $\mathbf{sig}_A \leftarrow \Sign(\sk_A, \acc_A)$, $H_0(\id_A)^\alpha$, $H_1(\id_A)^\alpha$ to $S_i$.
+			\item $A$ chooses a random blinding factor $\alpha \sample \mathbb{Z}_q$ and sends $\acc_A$, $\mathbf{sig}_A \leftarrow \SIG.\Sign(\sk_A, \acc_A)$, $\sigma_{\alpha,0} \leftarrow H_0(\id_A)^\alpha$, $\sigma_{\alpha,1} \leftarrow H_1(\id_A)^\alpha$ to $S_i$.
 			\item Upon reception of $A$'s request, $S_i$ retrieves the associated public key and checks that the signature $\mathbf{sig_A}$ is valid:
 			\begin{equation}
-				\Verif(\pk_A, \acc_A, \mathbf{sig}_A) = 1
+				\SIG.\Verif(\pk_A, \acc_A, \mathbf{sig}_A) = 1
 			\end{equation}
-		\item If the check succeeds, $S_i$ sends $(H_0(\id_A)^\alpha)^{s_i}$ and $(H_1(\id_A)^\alpha)^{s_i}$ to $A$
+		\item If the check succeeds, $S_i$ sends $\widehat\sigma_{i,0} \leftarrow {\sigma_{\alpha,0}}^{s_i}$ and $\widehat\sigma_{i,1} \leftarrow {\sigma_{\alpha,1}}^{s_i}$ to $A$.
 		\item Using $S_i$'s public key shares $({g_0}^{s_i}, {g_1}^{s_i})$, $A$ checks the following equalities:
 		\begin{align}
-			\Pair{(H_0(\id_A)^\alpha)^{s_i}}{g_0} &= \Pair{H_0(\id_A)^\alpha}{{g_0}^{s_i}} \\
-			\Pair{g_1}{(H_1(\id_A)^\alpha)^{s_i}} &= \Pair{{g_1}^{s_i}}{H_1(\id_A)^\alpha}
+			\Pair{\widehat\sigma_{i,0}}{g_0} &= \Pair{H_0(\id_A)^\alpha}{{g_0}^{s_i}} \\
+			\Pair{g_1}{\widehat\sigma_{i,1}} &= \Pair{{g_1}^{s_i}}{H_1(\id_A)^\alpha}
 		\end{align}
 		\item If the checks succeed (in other words, if $A$ receives valid signatures from the service), $A$ removes the blinding factor $\alpha$ to obtain $H_0(\id_A)^{s_i}$ and $H_1(\id_A)^{s_i}$.
 		\end{enumerate}
 		
+	
+	\paragraph{} $A$ repeats the above procedure with at least $t$ servers. Using the obtained signature shares, $A$ can recover the full signatures $H_0(\id_A)^s$ and $H_1(\id_A)^s$ using $\BTBLS.\Combine$.
+	
+
+
 		
 %\fbox{
 %	\procedure{Setup}{%
@@ -122,10 +131,6 @@
 %		\< \sendmessageleft{top={$(H_0(\id_A)^\alpha)^s, (H_1(\id_A)^\alpha)^s$}} 
 % }
 % }
-	
-	\paragraph{} $A$ repeats the above procedure with at least $t$ servers, using a new blinding factor for each server. Using the obtained signature shares, $A$ can recover the full signatures $H_0(\id_A)^s$ and $H_1(\id_A)^s$.
-	
-	
 
 
 \section{Privacy}
@@ -148,8 +153,9 @@
 		\item may control up to $t-1$ servers in the discovery service.
 	\end{itemize}
 	
+	\subsection{Proof outline}
 	
-	\paragraph{} To guide our analysis, we provide an attack tree\footnote{as defined by Schneier \cite{attacktree}} against the privacy property of our scheme in \autoref{fig:attacktree}. The root node represents the attacker's goal and each child node represents an option to solve the problem indicated in the parent node. Consequently leaf nodes represent the attacker's entry points. We will therefore consider each leaf and show that our scheme is protected against these attacks.
+	\paragraph{} To guide our analysis, we provide an attack tree\footnote{as defined by Schneier \cite{attacktree}} against the privacy property of our scheme in \autoref{fig:attacktree}. The root node represents the attacker's goal and each child node represents an option to solve the problem indicated in the parent node. Consequently leaf nodes represent the attacker's entry points: breaking the security of $F$, obtaining the master secret key $s$, forging BLS signatures on another user's discovery identifier, impersonating a user or computing the shared key material $(k_{AB}, f_{AB}, f_{BA})$. We will therefore consider each leaf node and show that our scheme is resistant against these attacks.
 	
 	
 		\begin{figure}[H]
@@ -167,12 +173,40 @@
 		
 %		\paragraph{} We provide a formal definition of secure left/right constrained PRFs by using an attack game. We will then show that the construction used in our scheme meets the security definition.
 		
+		\subsubsection{Security of our PRF construction}
 		
+		\paragraph{} We will first show that our construction for the left/right constrained PRF using an asymmetric pairing is secure as per definition \autoref{def:lrPRFsec}. Our construction is closely related to the one presented by Boneh and Waters \cite{LRPRF}. As such our proof makes use of very similar ideas.
 		
 		\begin{theorem}
 			The PRF $F$ defined as $F(k, (x,y)) = \Pair{H_0(x)}{H_1(y)}^k$ is a secure constrained PRF with respect to its constraining keys assuming the decisional bilinear Diffie-Hellman assumption holds for $e$ and the functions $H_0$ and $H_1$ are modelled as random oracles.
 		\end{theorem}
 		
+		\begin{proof}[\textbf{Proof outline}]
+			We assume for contradiction the existence of a probabilistic polynomial-time adversary $\adv$ that distinguishes $F$ from random as in definition \autoref{def:lrPRFsec}, however $\adv$ is limited to a single $\mathsf{Challenge}$ query. We can then construct an adversary $\bdv$ that breaks the decisional bilinear Diffie-Hellman (DBDH) assumption.\\
+			
+			Given $(g_0, g_1, u_0 \leftarrow {g_0}^\alpha, u_1 \leftarrow {g_1}^\alpha, v_0 \leftarrow {g_0}^\beta, w_1 \leftarrow {g_1}^\gamma, z^{(b)})$, $\bdv$'s goal is to determine whether $z^{(b)} = z^{(0)} = {g_0}^{\alpha\beta\gamma}$ or $z
+			^{(b)} = z^{(1)} = {g_0}^\delta$, where $\delta \sample \mathbb{Z}_q$ (see Attack Game \autoref{att:DBDH} in \autoref{ap:coCDH}). Using the pairing operation, this game can be viewed as distinguishing the output of $F$ from a random element of $\Gt$. Indeed let $b,c \in \mathcal{X}$ such that $H_0(b) = {g_0}^\beta$ and $H_1(c) = {g_1}^\gamma$, then:
+			\begin{equation}
+				\Pair{\Smallz{b}}{g_1} =
+				\begin{cases} \Pair{g_0}{g_1}^{\alpha\beta\gamma} = \Pair{{g_0}^\beta}{{g_1}^\gamma}^\alpha =  F(\alpha, (b, c)), & \text{if } b=0 \\
+				 \Pair{g_0}{g_1}^\delta	= {g_T}^\delta, & \text{if } b=1
+				\end{cases}
+			\end{equation}
+			Thus, $\bdv$ will run $\adv$ as a sub-routine and must therefore emulate its oracles, namely $F.\mathsf{eval}$, $F.\mathsf{constrain}$, $\mathsf{Challenge}$ and oracles for the hash functions $H_0,H_1$. \\
+			
+			When $\adv$ issues a query to $H_0(x)$, $\bdv$ chooses a consistent random $\widehat x \sample \mathbb{Z}_q$ and sets $H_0(x) \leftarrow {g_0}^{\widehat x}$. To one of $\adv$'s queries to $H_0$, $\bdv$ responds with $H_0(x^*) \leftarrow v_0$. Queries to $H_1$ are answered in a similar fashion where one query is responded to with $H_1(y^*) \leftarrow w_1$. Using these values, queries to $F.\mathsf{constrain}(x,LEFT)$ where $x\neq x^*$ are answered with $k_{x,LEFT} \leftarrow  {u_0}^{\widehat x}$. Notice that
+				$$ {u_0}^{\widehat x} = ({g_0}^\alpha)^{\widehat x} = {g_0}^{\alpha \widehat x} = ({g_0}^{\widehat x})^{\alpha} = H_0(x)^\alpha$$
+			Similarly, queries to $F.\mathsf{constrain}(y,RIGHT)$ where $y\neq y^*$ are answered with $k_{y,RIGHT} \leftarrow  {u_1}^{\widehat y}$. Queries to $F.\mathsf{eval}(x,y)$ are answered for $x \neq x^*$ or $y \neq y^*$ by building the constraining keys as it is done for the $F.\mathsf{constrain}$ oracle. Notice that $\bdv$ does not hold the values $\beta,\gamma$ and is therefore unable to answer queries to the $F.\mathsf{constrain}$ oracle for $(x^*, LEFT)$ and $(y^*, RIGHT)$, nor can it answer the $F.\mathsf{eval}$ query for $(x^*,y^*)$. This is in fact equivalent to starting Attack Game \autoref{att:lrPRF} with the set $C$ initialised to $\{(x^*,y^*)\}$. \\
+			
+			After $n$ queries to the $H_0$ oracle and $m$ queries to the $H_1$ oracle, $\adv$ will hold at most $n \times m$ pairs on which it could challenge.	 Some of these pairs may have been added to the set $V$ due to queries to $F.\mathsf{constrain}$ and $F.\mathsf{eval}$, and thus become ineligible for challenging. However, since the experiment started with $C = \{(x^*,y^*)\}$, we can be sure that $(x^*,y^*)$ is an eligible pair (remember that the attack game maintains the invariant $C \cap V = \emptyset$). Therefore, $\adv$ will challenge the pair $(x^*,y^*)$ with probability $p \geq \frac{1}{n\times m}$, to which $\bdv$ answers with $\Smallz{b}$. 
+			
+			If $b=0$, then $\Smallz{b} = F(\gamma, (x^*, y^*))$ and $\adv$ will answer as in experiment EXP(0). On the other hand if $b=1$, then $\Smallz{b} = {g_T}^{\delta}$ and $\adv$ will answer as in experiment EXP(1). Let $b'_\adv$ be the output of $\adv$, we define as $b'_\bdv \leftarrow b'_\adv$ the return value of $\bdv$. Thus
+			\begin{equation}
+				\Pr[b'_\bdv = b] \geq \frac{1}{n \times m} \times \Pr[b'_\adv = b]
+			\end{equation}
+			
+			As long as ${n \times m}$ is not exponential with respect to the security parameter, then $\bdv$'s advantage will be proportional to $\adv$'s and therefore non-negligible, thus breaking the DBDH assumption and yielding a contradiction.
+		\end{proof}
 
 
 	\subsection{Consequences of a breach}

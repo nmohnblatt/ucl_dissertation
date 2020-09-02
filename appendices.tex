@@ -37,7 +37,7 @@
 
 \paragraph{} The decisional variant is relatively straight-forward having already defined the co-CDH assumption. The attack setting is closely related, however the adversary is expected to distinguish an element from random (rather than required to computed it). Once again, the definition is adapted from \cite{BonehShoup} and uses a multiplicative notation for group operations.
 
-\begin{secgame}[Decision bilinear Diffie-Hellman \cite{BonehShoup}]
+\begin{secgame}[Decision bilinear Diffie-Hellman \cite{BonehShoup}]\label{att:DBDH}
 	Let $e : \Gzero \times \Gone \rightarrow \Gt$ be a pairing where $\Gzero,\Gone,\Gt$ are cyclic groups of prime order $q$ with generators $g_0 \in \Gzero$ and $g_1 \in \Gone$. For a given adversary $\adv$, we define the following experiment:
 	
 	\begin{itemize}
@@ -51,7 +51,7 @@
 \noindent We define the advantage of $\adv$ in solving the DBDH problem for $e$ as:
 
 \begin{equation}
-	\mathrm{DBDHavd}[\adv, e] := \frac{1}{2} - \mathrm{Pr}(\hat b = b)
+	\mathrm{DBDHavd}[\adv, e] := \abs{\frac{1}{2} - \mathrm{Pr}(\hat b = b)}
 \end{equation}
 
 \begin{definition}[Decision BDH assumption \cite{BonehShoup}]
