@@ -2,7 +2,7 @@
 \label{chap:intro}
 
 
-\paragraph{} Privacy-oriented services such as end-to-end encrypted messaging are increasingly popular \cite{e2epopular}. While they provide strong cryptographic guarantees for the confidentiality of message contents, many still leak or gather user-related data. This is particularly the case during a setup stage known as \textit{contact discovery}. As a result, some of these applications gain access to their users' address book and therefore their mobile social graph \cite{Telegram,WhatsApp}. In this project, we are interested in performing \textit{contact discovery} in a privacy-preserving manner while remaining practical for mobile applications with billions of users.
+\paragraph{} Privacy-oriented services such as end-to-end encrypted messaging are increasingly popular \cite{e2epopular}. While they provide strong cryptographic guarantees for the confidentiality of message contents, many still leak or gather user-related data. This is particularly the case during a setup stage known as \textit{contact discovery}. As a result, some of these applications gain access to their users' address books and therefore their mobile social graph \cite{Telegram,WhatsApp}. In this project, we are interested in performing \textit{contact discovery} in a privacy-preserving manner while remaining practical for mobile applications with billions of users.
 
 \section{What is contact discovery?}
 
@@ -16,7 +16,7 @@
 \paragraph{} The simplest way to perform contact discovery is arguably to send one's address book to the service operator, allowing them to compute the intersection between the address book and the list of registered users. This is in fact how the popular messaging services WhatsApp and Telegram perform their contact matching \cite{Telegram,WhatsApp}. Although efficient, this approach reveals large amounts of private information about  users and their contacts, including those that are not register for the service. The service operator is able to construct a social graph of its users and their first connections, allowing it to check for individual connections at will or under government pressure. Such information may discourage whistleblowers from ever speaking up, in fear that their identity may be revealed if they are linked to journalists.
 
 
-\paragraph{Hash Functions --}A naive approach using only cryptographic hash functions will also fail to meet our goal \cite{Kales19, Signal:Difficulty}. A user could upload hashes of her contact's identifiers for the service operator to compare against hashes of the registered users' identifiers. While this approach is efficient and yields the desired result, it will still leak the user's address book.
+\paragraph{Naive hashing --}A naive approach using only cryptographic hash functions will also fail to meet our goal \cite{Kales19, Signal:Difficulty}. A user could upload hashes of her contact's identifiers for the service operator to compare against hashes of the registered users' identifiers. While this approach is efficient and yields the desired result, it will still leak the user's address book.
 
 Indeed, although the cryptographic hash function is pre-image resistant, the set of possible pre-images is small enough that hashes can be precomputed into a dictionary and used to find the identifiers that underly the uploaded hashes \cite{Signal:Difficulty}. Salting these hashes to avoid offline computations renders the system unusable since the service operator would be required to hash the set of registered identifiers using a different salt for each attempt at contact discovery \cite{Kales19}.
 
@@ -37,7 +37,7 @@ Efficiency therefore constitutes a priority in the design of such contact discov
 \section{A peer-to-peer approach}
 
 % TODO review section after writing system chapter
-\paragraph{} In this report, we present a peer-to-peer approach that makes use of pairing-based cryptography. By doing so, we reduce the service operator's role to a minimum and provide clients with the tools to compute shared secret keys with their contacts. Computations on the client side are of linear order with respect to the size of their address book. Furthermore, clients are only expected to communicate with the service during set-up and are only required to store short cryptographic material.
+\paragraph{} In this report, we present a peer-to-peer approach that makes use of pairing-based cryptography. By doing so, we reduce the service operator's role to a minimum and provide clients with the tools to compute shared secret keys with their contacts. Computations on the client side are of linear order with respect to the size of their address book. Furthermore, clients are only expected to communicate with the service during setup and are only required to store short cryptographic material.
 
 
 

@@ -4,14 +4,14 @@
 \paragraph{} In this chapter we provide an overview of state-of-the-art methods for privacy-preserving contact discovery, as well as academic attempts at solving a similar problem. These methods can be divided according to their underlying approach: the first aims at computing the intersection between a list of registered users and an address book, the second aims at providing users with the necessary cryptographic material needed to authenticate and establish shared secrets between each other
 
 
-\paragraph{} In \autoref{sec:signal}, we cover Signal's approach which is to simply process each user's address book without storing her contacts \cite{Signal:Tech}. To convince users that they are trustworthy, Signal publish their code and allow their servers to be audited remotely. In \autoref{sec:PSI}, we investigate cryptographic ways to perform a set intersection between two parties without either party learning the other's data. This is known as a private set intersection (PSI). The subsequent attempts fall under the second approach described above. Thus \autoref{sec:PKI} focuses on public key infrastructure and \autoref{sec:IBKE} on identity-based key exchanges.
+\paragraph{} In \autoref{sec:signal}, we cover Signal's approach which is to simply process each user's address book without storing her contacts \cite{Signal:Tech}. To convince users that they are trustworthy, Signal publish their code and allow users to verify what code is being run by their servers. In \autoref{sec:PSI}, we investigate cryptographic ways to perform a set intersection between two parties without either party learning the other's data. This is known as a private set intersection (PSI). The subsequent attempts fall under the second approach described above. Thus \autoref{sec:PKI} focuses on public key infrastructure and \autoref{sec:IBKE} on identity-based key exchanges.
 
 \section{Public source code and remote attestation}
 \label{sec:signal}
 
 \subsection{Signal and Intel SGX}
 
-\paragraph{} Signal's approach is arguably the simplest: request a user's address book, process it against the list of registered users and clear the servers from any knowledge linked to it \cite{Signal:Tech}. While this process may seem trivial, it creates new challenges in terms of security and user trust. First, Signal must guarantee that no knowledge of the address book remains on the server, be it obtained through regular or side channels. Secondly, Signal needs to earn the trust of it users. Not only do they need to convince users that their process is completely oblivious, they must also provide constant evidence that their servers are running that particular process rather than any other.
+\paragraph{} Signal's approach is arguably the simplest: request a user's address book, process it obliviously against the list of registered users and clear the servers from any knowledge linked to it \cite{Signal:Tech}. While this process may seem trivial, it creates new challenges in terms of security and user trust. First, Signal must guarantee that no knowledge of the address book remains on the server, be it obtained through regular or side channels. Secondly, Signal needs to earn the trust of its users. Not only do they need to convince users that their process is completely oblivious, they must also provide constant evidence that their servers are running that particular process rather than any other.
 
 \paragraph{} They meet both challenges by publishing their server-side code and performing all their processing within ``secure enclaves'' on their servers.
 
@@ -19,12 +19,17 @@
 \section{Private set intersection (PSI)}
 \label{sec:PSI}
 
+Kales // Basic Bloom Filter
+
 % \section{Private information retrieval (PIR)}
 
 
 \section{Public key infrastructure (PKI)}
 \label{sec:PKI}
 
+CONIKs // DNS
 
 \section{Identity-based key exchange (IBKE)}
 \label{sec:IBKE}
+
+Boneh Waters // 
