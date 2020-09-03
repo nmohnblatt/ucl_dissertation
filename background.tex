@@ -73,11 +73,11 @@
 
 \end{definition} 
 
-\begin{theorem}[Security of BLS Signatures \cite{BonehShoup}]
+\begin{theorem}[Security of BLS Signatures \cite{BonehShoup}] \label{th:blsforge}
 	Let $e : \Gzero \times \Gone \rightarrow \Gt$ be a pairing, let $\mathcal{M}$ be the message space and let $H: \mathcal{M} \rightarrow \Gzero$ be a hash function. Then the derived BLS signature scheme is \textbf{existentially unforgeable under chosen message attacks} assuming the co-Computational Diffie-Hellman assumption\footnote{see \autoref{ap:coCDH}} holds for $e$, and $H$ is modelled as a random oracle.
 \end{theorem} 
 
-\paragraph{} Blind and/or threshold variants of this scheme exist. The former allows to hide the original message from the signer, while the latter allows to hide the complete signature from any individual (non-colluding) signer. We define a blind $(t,n)$-threshold BLS signature below. Once again, we only present the variant in which signatures are elements of $\Gzero$ and public keys are elements of $\Gone$. 
+\paragraph{} Blind and/or threshold variants of this scheme exist. The former allows to hide the original message from the signer, while the latter allows to hide the complete signature from any individual (non-colluding) signer. We define a blind $(t,n)$-threshold BLS signature scheme below. Once again, we only present the variant in which signatures are elements of $\Gzero$ and public keys are elements of $\Gone$. 
 
 \begin{definition}[Blind $(t,n)$-threshold BLS Signature]\label{def:BTBLS} A blind $(t,n)$-threshold BLS signature scheme $\mathcal{S}_{BTBLS}$ is composed of six algorithms $\Keygen$, $\Blind$, $\Sign$, $\Combine$, $\Unblind$, $\Verif$. Let $\Gzero, \Gone, \Gt$ be three cyclic groups of prime order $q$ such that there exists a pairing $e : \Gzero \times \Gone \rightarrow \Gt$. $g_0 \in \Gzero$ and $g_1 \in \Gone$ are generators. Let $H_0$ a cryptographic hash function defined as $H_0: \{0,1\}^* \rightarrow \mathbb{G}_0$, we define the six algorithms as:
 	
@@ -86,6 +86,7 @@
 		$\Blind(m)$: Choose uniformly at random $\alpha \sample \mathbb{Z}_q$. Output $\sigma_\alpha \leftarrow H_0(m)^\alpha$ and $\alpha$. \\
 		$\Sign(\sk_i, \sigma_\alpha)$: Output the signature $\widehat{\sigma_i} \leftarrow {\sigma_\alpha}^{\sk_i}$. \\
 		$\Combine(\widehat{\sigma_{j_1}}, \widehat{\sigma_{j_2}}, \dots, \widehat{\sigma_{j_t}})$: Use Lagrange interpolation on a subset of $t$ blinded partialn signatures $\widehat{\sigma_{j_1}}, \widehat{\sigma_{j_2}}, \dots, \widehat{\sigma_{j_t}}$ to recover the full blinded signature $\widehat \sigma$. \\
+		$\Unblind(\widehat \sigma, \alpha)$: Output $\sigma \leftarrow \widehat \sigma^{(\alpha^{-1})} $ as the full unblinded signature. \\
 		$\Verif(\sigma, m, \pk)$: If $e(\sigma, g_1) = e(H_0(m), \pk)$ accept the signature. Otherwise reject.
 	\end{quote}
 	
@@ -96,7 +97,7 @@
 
 \section{Left/Right constrained pseudorandom functions}
 
-\paragraph{} Left/right constrained pseudorandom functions were first introduced by Boneh and Waters \cite{LRPRF}. These pseudorandom functions (PRFs) are evaluated over a pair of inputs $x,y$ with a random key $k$ -- we denote the output value as $F(k, (x,y))$. These functions can then be ``constrained'' to their left or their right input using \textit{constraining keys}: knowing the left constraining key for a specific value $w$ allows to compute $F(k, (w,y))$ at all points $y$ with no knowledge of $k$. Similarly, the right constraining key for a value $w$ allows to compute $F(k, (x,w))$ at all points $x$ with no knowledge of $k$. Left/right PRFs are formally defined in \cite{LRPRF} as:
+\paragraph{} Left/right constrained pseudorandom functions were first introduced by Boneh and Waters \cite{LRPRF}. These pseudorandom functions (PRFs) are evaluated over a pair of inputs $x,y$ with a random key $k$ -- we denote the output value as $F(k, (x,y))$. These functions can then be ``constrained'' to their left or their right input using \textit{constraining keys}: knowing the left constraining key for a specific value $w$ allows to compute $F(k, (w,\cdot))$ at all points $(w, \cdot)$ with no knowledge of $k$. Similarly, the right constraining key for a value $w$ allows to compute $F(k, (\cdot,w))$ at all points $(\cdot,w)$ with no knowledge of $k$. Left/right constrained PRFs are formally defined in \cite{LRPRF} as:
 
 \begin{definition}[Left/right constrained PRF \cite{LRPRF}]
 	Let $F: \mathcal{K} \times \mathcal{X}^2 \rightarrow \mathcal{Y}$ be a PRF. For all $w \in \mathcal{X}$ we wish to support constrained keys $k_{w, \mathrm{LEFT}}$ that enable the evaluation of $F(k, (x,y))$ at all points $(w,y)\in \mathcal{X}^2$, that is, at all points in which the left side is fixed to $w$. In addition, we want constrained keys $k_{w,\mathrm{RIGHT}}$ that fix the right hand side of $(x,y)$ to $w$. More precisely, for an element $w \in \mathcal{X}$ define the two predicates $p_w^{(L)}, p_w^{(R)}: \mathcal{X}^2 \rightarrow \{0,1\}$ as
@@ -122,8 +123,8 @@
 The adversary is then presented with three oracles as follows:
 
 \begin{itemize}
-	\item $F.\mathsf{eval}(x,y)$: given $(x,y) \in \mathcal{X}^2$ from $\adv$ if $x \notin C$ the oracle returns $F(k, (x,y))$ and otherwise returns $\bot$. The set $V$ is updated as $V\leftarrow V \cup \{(x,y)\}$.
-	\item $F.\mathsf{constrain}(w,d)$: given a coordinate $w \in \mathcal{X}$ and a direction $d \in \{LEFT,RIGHT\}$ from $\adv$ we define $S$ as the set of all points $p$ such that $p = (w, \cdot)$ if $d=LEFT$ or $p = (\cdot, w)$ if $d=RIGHT$. If $S\cap C= \emptyset$ the oracle returns the constraining keys $k_{w, d}$. The set $V$ is updated $V\leftarrow V \cup S$.
+	\item $F.\mathsf{eval}(x,y)$: given $(x,y) \in \mathcal{X}^2$ from $\adv$ if $(x,y) \notin C$ the oracle returns $F(k, (x,y))$ and otherwise returns $\bot$. The set $V$ is updated as $V\leftarrow V \cup \{(x,y)\}$.
+	\item $F.\mathsf{constrain}(w,d)$: given a coordinate $w \in \mathcal{X}$ and a direction $d \in \{LEFT,RIGHT\}$ from $\adv$ we define $S$ as the set of all points $p$ such that $p = (w, \cdot)$ if $d=LEFT$ or $p = (\cdot, w)$ if $d=RIGHT$. If $S\cap C= \emptyset$ the oracle returns the constraining key $k_{w, d}$. The set $V$ is updated $V\leftarrow V \cup S$.
 	\item $\mathsf{Challenge}(x,y)$: given $(x,y)\in \mathcal{X}^2$ where $(x,y) \notin V$, if $b=0$ the adversary is given $F(k, (x,y)))$; otherwise the adversary is given a random (consistent) $z \in \mathcal{Y}$. The set $C$ is updated $C \leftarrow C \cup \{(x,y)\}$.
 \end{itemize}
 			Once the adversary is done interrogating the oracles, it outputs $b' \in \{0,1\}$.\\
@@ -133,7 +134,7 @@ The adversary is then presented with three oracles as follows:
 			\end{equation}
 		\end{secgame}
 		
-		\noindent An equivalent definition for the adversary's advantage is $\mathrm{AdvPRF_{\adv, F}}(\lambda) = \abs{\frac{1}{2} - \Pr[b' = b]}$. Indeed, using the law of total probability:
+		\noindent When experiences EXP(0) and EXP(1) are performed equally many times, an equivalent definition for the adversary's advantage is $\mathrm{AdvPRF_{\adv, F}}(\lambda) = \abs{\frac{1}{2} - \Pr[b' = b]}$. Indeed, using the law of total probability:
 		\begin{align}
 				\mathrm{AdvPRF_{\adv, F}} &= \abs{\mathrm{Pr}[W_0] - \mathrm{Pr}[W_1]} \\
 				&= \abs{\Pr[b' = 1 \land b=0] - \Pr[b' = 1 \land b=1]} \\
@@ -148,8 +149,6 @@ The adversary is then presented with three oracles as follows:
 			The PRF $F$ is a secure constrained PRF with respect to $\mathcal{S}$ if for all probabilistic
 polynomial time adversaries $\adv$ the function $\mathrm{AdvPRF}_{\adv,F}(\lambda)$ is negligible.
 		\end{definition}
-
-
 
 
 \paragraph{Implementation --} \label{leftright} Boneh and Waters \cite{LRPRF} present a secure left/right constrained PRF construction under the random oracle model by making use of a symmetric pairing. Here we present a variant that makes use of asymmetric pairings. Let $\Gzero, \Gone, \Gt$ be three cyclic groups of prime order $q$ such that there exists a pairing $e : \Gzero \times \Gone \rightarrow \Gt$. Let $H_0: \{0,1\}^* \rightarrow \Gzero$ and $H_1: \{0,1\}^* \rightarrow \Gone$ be two hash functions modelled as random oracles. For a random key $k$, we define the left/right constrained PRF $F$ as:
