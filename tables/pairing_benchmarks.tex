@@ -1,0 +1,30 @@
+
+	
+
+\begin{table}[H]
+	\begin{center}
+		\begin{tabular}{l||l|l|l}
+		Operation            		 & BN254 & BN381\_1  & BN462  \\
+		\hline
+		Pairing           			 & 3.9   & 11.752 & 22.578 \\
+		Addition in $\Gzero$ 		 & 0.006 & 0.015  & 0.018  \\
+		Point doubling in $\Gzero$   & 0.005 & 0.01   & 0.019  \\
+		Multiplication in $\Gzero$   & 0.843 & 2.615  & 5.339  \\
+		Addition in $\Gone$ 		     & 0.015 & 0.03   & 0.048  \\
+		Point doubling in $\Gone$    & 0.011 & 0.022  & 0.034  \\
+		Multiplication in $\Gone$    & 1.596 & 4.581  & 9.077  \\
+		Hash to $\Gzero$             & 0.212 & 0.507  & 1.201  \\
+		Hash to $\Gone$              & 3.486 & 9.93   & 21.817 \\
+%		Fr::add               & 0.002 & 0.002  & 0.002  \\
+%		Fr::mul               & 0.002 & 0.003  & 0.003  \\
+%		Fr::sqr               & 0.002 & 0.003  & 0.004  \\
+%		Fr::inv               & 0.037 & 0.062  & 0.078  \\
+%		GT::add               & 0.003 & 0.003  & 0.003  \\
+%		GT::mul               & 0.021 & 0.037  & 0.058  \\
+%		GT::sqr               & 0.014 & 0.026  & 0.04   \\
+%		GT::inv               & 0.074 & 0.131  & 0.19  
+		\end{tabular}
+		\caption{Timing benchmarks for elliptic curve operations over three curves (BN254, BN381\_1 and BN462) executed on an iPhone 7 running iOS 11.2.1. All timings are given in milliseconds. \cite{MCLBench}}
+		\label{table:benchmarks}
+	\end{center}
+\end{table}
