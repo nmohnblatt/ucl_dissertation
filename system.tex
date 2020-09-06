@@ -35,7 +35,7 @@
 		\begin{itemize}
 			\item \textbf{Users:} each user $A$ holds an opaque account identifier $\acc_A$, an address $\addr_A$, a key pair $(\sk_A,\pk_A)$, a discovery identifier $\id_A$ and an address book $\contacts{A}$ (see \autoref{sec:probstatement}). We denote $\mathcal{ID}$ the set of all existing discovery identifiers.
 			\item \textbf{Discovery Service:} the discovery service is a distributed entity. We denote the set of all servers as $\mathcal{S}$ and the $i$-th server as $S_i$. All $n$ servers have jointly executed a $(t,n)$-distributed key generation algorithm such as to hold shares $s_i$ of an unknown master secret key, which we denote $s$. Furthermore, each server holds a list of tuples $(\acc, \pk)$ for all registered users.
-			\item \textbf{Online Cache:} the online cache may be operated by the discovery scheme or by a third party and is assumed to be untrusted. Its role is to manage key-value pairs.
+			\item \textbf{Online Cache:} the online cache may be operated by the discovery scheme or by a third party and is assumed to be untrusted. Its role is to manage key-value pairs. One possible implementation of such a cache is to follow the DNS-based approach of Papadopoulos \textit{et al.} \cite{Papadopoulos18}.
 			
 			\end{itemize}
 			
@@ -321,11 +321,17 @@
 
 	\subsection{End-to-end encrypted messaging}
 	
+	\paragraph{} The Signal Protocol uses the ``X3DH'' (Extended Triple Diffie-Hellman) protocol to ``[establish] a shared secret between two parties that mutually authenticate each other'' \cite{Signal:X3DH}. Users $A$ and $B$ first exchange a set of public keys to then derive a shared secret. We can modify our discovery scheme such that the initial ciphertext left on the online cache contains the necessary public key information to perform the X3DH protocol. Following this initial key establishment, our scheme hands over key management to the Signal Protocol which implements a ``Double Ratchet'' algorithm to renew keys and protect past and future message confidentiality in the case of key leaks \cite{Signal:Ratchet}. 
+	
+	\paragraph{} Signal also performs a phone number registration step which makes use out-of-bound verification \cite{Signal:Reg}. This step is less documented, however its existence implies that Signal is able to issue identification tokens to its users, thus protecting our scheme from impersonation attacks. 
+	
 	\subsection{Mobile-first cryptocurrencies}
 	
+	\paragraph{} Celo is a decentralised payment system based on a blockchain architecture. Users can therefore send and receive transactions using account addresses - a 30+ character hexadecimal string. As Celo aims to bring fast payment systems to ``anyone with a smartphone'' \cite{Celo:Doc}, they provide a service which allows users to ignore these complex addresses and use phone numbers instead. This setting naturally maps to our contact discovery scheme (phone number as a discovery identifier linked to the Celo-provided secret key, public key and address).
 	
+	\paragraph{} Through its blockchain and the validators that run it during a given epoch, Celo offers a decentralised phone number attestation service. Once a user proves they own a phone number, a salted hash of the number and the associated Celo account are committed to the blockchain. Users can discover each other by issuing oblivious, rate-limited requests for a user's salt to then check the on-chain phone number attestation records.	
 	
-	
+	\paragraph{} Instead, Celo could provide stronger privacy guarantees by issuing identification tokens through its attestation process and delegating the contact discovery process. Our contact discovery service could then use the public keys associated to the combined secret key of the validators of a given epoch to verify these tokens. As this authentication step prevents impersonation attacks, our scheme can then run as described in this chapter. Doing so allows to securely link phone numbers to account addresses without committing this data to a public blockchain.
 	
 	
 	
