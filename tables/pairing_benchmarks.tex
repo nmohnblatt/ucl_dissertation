@@ -3,18 +3,18 @@
 
 \begin{table}[H]
 	\begin{center}
-		\begin{tabular}{l||l|l|l}
-		Operation            		 & BN254 & BN381\_1  & BN462  \\
+		\begin{tabular}{l|c||c|c|c}
+		Operation            		 & Notation 				     & BN254 & BN381\_1  & BN462  \\
 		\hline
-		Pairing           			 & 3.9   & 11.752 & 22.578 \\
-		Addition in $\Gzero$ 		 & 0.006 & 0.015  & 0.018  \\
-		Point doubling in $\Gzero$   & 0.005 & 0.01   & 0.019  \\
-		Multiplication in $\Gzero$   & 0.843 & 2.615  & 5.339  \\
-		Addition in $\Gone$ 		     & 0.015 & 0.03   & 0.048  \\
-		Point doubling in $\Gone$    & 0.011 & 0.022  & 0.034  \\
-		Multiplication in $\Gone$    & 1.596 & 4.581  & 9.077  \\
-		Hash to $\Gzero$             & 0.212 & 0.507  & 1.201  \\
-		Hash to $\Gone$              & 3.486 & 9.93   & 21.817 \\
+		Pairing           			 & $\mathbf{p}$ 				 &3.9   & 11.752 & 22.578 \\
+		Addition in $\Gzero$ 		 & $\mathbf{add}_{\Gzero}$   &0.006 & 0.015  & 0.018  \\
+		Point doubling in $\Gzero$   & $\mathbf{dbl}_{\Gzero}$   &0.005 & 0.01   & 0.019  \\
+		Multiplication in $\Gzero$   & $\mathbf{mul}_{\Gzero}$   &0.843 & 2.615  & 5.339  \\
+		Addition in $\Gone$ 		     & $\mathbf{add}_{\Gone}$    &0.015 & 0.03   & 0.048  \\
+		Point doubling in $\Gone$    & $\mathbf{dbl}_{\Gone}$    &0.011 & 0.022  & 0.034  \\
+		Multiplication in $\Gone$    & $\mathbf{mul}_{\Gone}$    &1.596 & 4.581  & 9.077  \\
+		Hash to $\Gzero$             & $\mathbf{hash}_{\Gzero}$  &0.212 & 0.507  & 1.201  \\
+		Hash to $\Gone$              & $\mathbf{hash}_{\Gone}$   &3.486 & 9.93   & 21.817 \\
 %		Fr::add               & 0.002 & 0.002  & 0.002  \\
 %		Fr::mul               & 0.002 & 0.003  & 0.003  \\
 %		Fr::sqr               & 0.002 & 0.003  & 0.004  \\

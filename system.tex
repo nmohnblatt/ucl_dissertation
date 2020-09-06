@@ -48,7 +48,7 @@
 			\end{equation}
 			\item $\mathbf{KDF}$ is a public, deterministic key derivation function.
 			\item $\BTBLS$ is a blind $(t,n)$-threshold BLS signature scheme (see definition \autoref{def:BTBLS}). We denote this scheme's algorithms as $\BTBLS . \Keygen$, $\BTBLS . \Sign$, \textit{etc...} 
-			\item $\mathsf{SIG}$ is a strong existentially unforgeable signature scheme which makes use of the third-party provided user keys $(\sk_A,\pk_A)$ and is composed of algorithms $\SIG . \Sign$ and $\SIG . \Verif$.
+			\item $\SIG$ is a strong existentially unforgeable signature scheme which makes use of the third-party provided user keys $(\sk_A,\pk_A)$ and is composed of algorithms $\SIG . \Sign$ and $\SIG . \Verif$.
 			\item The master secret key is set to an integer $s \in \mathbb{Z}_q$ chosen uniformly at random. We define two corresponding master public keys ${g_0}^s$ and ${g_1}^s$, for which there exists $i$ public shares denoted as ${g_0}^{s_i}$ and ${g_1}^{s_i}$ respectively.
 			\item Let $n$ the number of servers ($n=|\mathcal{S}|$)) and $t$ a fixed threshold such that $1 \leq t \leq n$, we assume that the master secret key is shared according to a secure $t$-out-of-$n$ secret sharing scheme and that no single entity holds the master secret key.
 		\end{itemize}
@@ -108,7 +108,9 @@
 		\item If the check succeeds, $S_i$ sends $\widehat\sigma_{i,0} \leftarrow {\sigma_{\alpha,0}}^{s_i}$ and $\widehat\sigma_{i,1} \leftarrow {\sigma_{\alpha,1}}^{s_i}$ to $A$.
 		\item Using $S_i$'s public keys $({g_0}^{s_i}, {g_1}^{s_i})$, $A$ checks the following equalities:
 		\begin{align}
+			\label{eq:usercheck0}
 			\Pair{\widehat\sigma_{i,0}}{g_0} &= \Pair{H_0(\id_A)^\alpha}{{g_0}^{s_i}} \\
+			\label{eq:usercheck1}
 			\Pair{g_1}{\widehat\sigma_{i,1}} &= \Pair{{g_1}^{s_i}}{H_1(\id_A)^\alpha}
 		\end{align}
 		\item If the checks succeed (in other words, if $A$ receives valid signatures from the service), $A$ removes the blinding factor $\alpha$ to obtain $H_0(\id_A)^{s_i}$ and $H_1(\id_A)^{s_i}$.
@@ -140,9 +142,7 @@
 \label{sec:security}
 
 
-\paragraph{} We will now evaluate the privacy guarantees of our scheme when there are strictly less than $t$ malicious servers. At first, we work under the assumption that discovery identifiers are correctly linked to the users who own them. We then discuss ways in which this assumption can be upheld in practice.
-
-
+\paragraph{} We will now evaluate the privacy guarantees of our scheme when there are strictly less than $t$ malicious servers. Our scheme hides the links between users as long as the decisional bilinear Diffie-Hellman assumption holds for the pairing $e$, the master secret key $s$ does not leak and both constraining keys $\keyleft{X}, \keyright{X}$ are known only to user $X$. We present the threat model, potential attacks, outlines of security proofs as well as the consequences of a security breach.
 
 
 
@@ -156,9 +156,11 @@
 		\item may control up to $t-1$ servers in the discovery service.
 	\end{itemize}
 	
+	\noindent Notice that we are working under the assumption that discovery identifiers are correctly linked to the users who own them. We discuss ways in which this assumption can be upheld in practice in \autoref{sec:impersonation}, under ``\textbf{Impersonating a user}''
+	
 	\subsection{Proof outline}
 	
-	\paragraph{} To guide our analysis, we provide an attack tree\footnote{as defined by Schneier \cite{attacktree}} against the privacy property of our scheme in \autoref{fig:attacktree}. The root node represents the attacker's goal and each child node represents an option to solve the problem indicated in the parent node. Consequently leaf nodes represent the attacker's entry points: breaking the security of $F$, obtaining the master secret key $s$, forging BLS signatures on another user's discovery identifier, impersonating a user or computing the shared key material $(k_{AB}, f_{AB}, f_{BA})$. We will therefore consider each leaf node and show that our scheme is resistant against these attacks.
+	\paragraph{} To guide our analysis, we provide an attack tree\footnote{as defined by Schneier \cite{attacktree}} against the privacy property of our scheme in \autoref{fig:attacktree}. The root node represents the attacker's goal and each child node represents an option to solve the problem indicated in the parent node. Consequently, leaf nodes represent the attacker's entry points: breaking the security of $F$, obtaining the master secret key $s$, forging BLS signatures on another user's discovery identifier, impersonating a user or computing the shared key material $(k_{AB}, f_{AB}, f_{BA})$. We will therefore consider each leaf node and show that our scheme is resistant against these attacks.
 	
 	
 		\begin{figure}[H]
@@ -225,6 +227,7 @@
 
 
 \subsubsection{Impersonating a user}
+\label{sec:impersonation}
 
 \paragraph{} Impersonation attacks are the most threatening to our scheme and lead to open questions. We first describe the issue and offer two solutions, neither of which are fully satisfying. The attack is performed by running the setup process maliciously from the user side: upon receiving a challenge $c$, $\Tadv$ can send the tuple $(\acc_{\Tadv}$, $\SIG.\Sign(\sk_{\Tadv}, \acc_{\Tadv}||c)$, $H_0(\id_A)^\alpha$, $H_1(\id_A)^\alpha$). The server $S_i$ receiving this tuple will find that the signature $\SIG.\Sign(\sk_{\Tadv}, \acc_{\Tadv}||c)$ does verify for the specified account and challenge. Furthermore, $S_i$ will be unable to distinguish the blinded values $H_0(\id_A)^\alpha, H_1(\id_A)^\alpha$ from random elements in $\Gzero$ and $\Gone$ respectively. As such $S_i$ will issue partial constraining keys for $\id_A$ to $\Tadv$. Repeating this process with $t$ servers, $\Tadv$ will obtain the full constraining keys for user $A$.
 
@@ -232,7 +235,7 @@
 
 \paragraph{} The second solution makes use of identification tokens to delegate the task of linking a user to their discovery identifier. Suppose an entity $V$ (centralised or distributed) is trusted to verify whether a user owns a discovery identifier. Using a secret key $v \sample \mathbb{Z}_q$ and the corresponding public keys ${g_0}^v$ and ${g_1}^v $, $V$ could issue ownership tokens in the form of BLS signatures $t_{0,A}= H_0(\id_A)^v, t_{1,A}=H_1(\id_A)^v$. These tokens can then be blinded and verified against a blinded discovery identifier $H_0(\id_A)^\alpha, H_1(\id_A)^\alpha$:
 \begin{align}
-\label{eq:token0}
+	\label{eq:token0}
 	\Pair{{t_{0,A}}^\alpha}{g_1} = \Pair{H_0(\id_A)^\alpha}{{g_1}^v} &\iff t_{0,A} = H_0(\id_A)^v \\
 	\label{eq:token1}
 	\Pair{g_0}{{t_{1,A}}^\alpha} = \Pair{{g_0}^v}{H_1(\id_A)^\alpha} &\iff t_{1,A} = H_1(\id_A)^v
@@ -244,15 +247,106 @@
 
 	\subsection{Consequences of a breach}
 	
+	\paragraph{} To conclude our investigation of the scheme's privacy properties, we evaluate the consequences of various breaches of the protocol. Let us first consider the scenario in which a pair of constraining keys $\keyleft{\id_A}, \keyright{\id_A}$ is leaked. Using these keys, an attacker will be able to compute the shared key material $(k_{AX}, f_{AX}, f_{BX})$ between $A$ and any other user $X$. The attacker is then able to:
+	\begin{enumerate}[label=(\alph*)]
+		\item check whether $X$ has written to the cache in location $H(f_{XA})$, thus uncovering whether $\id_A \in \contacts{X}$. Iterating over all $\id_X \in \mathcal{ID}$ allows to determine which users hold $\id_A$ in their contacts. 
+		\item decrypt the message (if any) left by $X$ at location $H(f_{XA})$ using the key $k_{AX}$, thus linking $\id_X$ to an address and public key.
+		\item check whether $A$ has written to the cache in location $H(f_{AX})$, thus uncovering whether $\id_X \in \contacts{A}$. Iterating over all $\id_X \in \mathcal{ID}$ allows to recover all of $A$'s contacts.
+		\item overwrite the value that $A$ wrote in location $H(f_{AX})$ using the key $k_{AX}$. This allows the attacker to send any address and public key to $X$, thus hijacking any channel that $A$ and $X$ were wishing to establish.
+	\end{enumerate}
+	
+	\paragraph{} Should only one of the constraining keys leak, the attacker will only be able to perform a subset of the actions above. Indeed, obtaining a $LEFT$ key only allows to compute $f_{AX}$. The attacker will therefore only be able to perform action (c). Similarly, obtaining only a $RIGHT$ key limits the attacker's possibilities to (a). In either case, these breaches represent a complete loss of privacy. Finally, obtaining the master secret key allows to compute any constraining key, thus allowing to perform the above operations for any pair of users.
 
 
 \section{Theoretical performance evaluation}
 \label{sec:performance}
 
 
+
+	\paragraph{} In this section we present a brief evaluation of the scheme's efficiency. Importantly, we show that all computational costs grow linearly with respect to the input size. We estimate the computation time associated with each phase of our discovery scheme using benchmark timings from the mobile-friendly elliptic curve pairing library MCL \cite{MCLLib}. These benchmark tests were performed on an iPhone 7 running iOS 11.2.1, executing operations over three Barreto-Naehrig (BN) elliptic curves with varying security parameters \cite{MCLBench}. The results are summarised in \autoref{table:benchmarks}. Notice that we are now working with elliptic curves and therefore adopt an additive notation for the group operation.
+	
+	\input{tables/pairing_benchmarks}
+	
+	
+	\subsubsection{Computational cost: Setup with identification tokens}
+	
+	\paragraph{} First, let us inspect the setup phase with identification tokens. This phase only needs to be performed once per user and per server. As such we will evaluate the computational cost of a single user-server interaction, then consider the scaling with respect to the total number of users $N$ and the threshold of servers $t$. We assume that users already hold a hash of their own discovery identifier. By inspection of the protocol, the setup phase requires: 
+	\begin{quote}
+		\textbf{User:} 2 multiplications in $\Gzero$, 2 multiplications in $\Gone$ (blind and unblind identifier), 4 pairing operations (\autoref{eq:usercheck0}, \autoref{eq:usercheck1}), one standard digital signature. Identification tokens introduce one additional multiplication in $\Gzero$, and one multiplication in $\Gone$ (blind tokens). After repeating these operations with enough servers to meet the system's threshold, a user is required to recombine $t$ partial BLS signatures in both $\Gzero$ and $\Gone$. Using Lagrange interpolation, each of these recombinations require $t$ multiplications and $t$ additions in their respective source group. We can now express the time spent by each user on computations for the setup phase as a function of $t$:
+		\begin{equation}
+			\mathrm{comp}_{\mathrm{setup, user}}(t) = t(4(\mathbf{mul}_{\Gzero} + \mathbf{mul}_{\Gone} + \mathbf{p}) + \mathbf{add}_{\Gzero} + \mathbf{add}_{\Gzero} + \mathbf{DSA}_S)
+		\end{equation}
+		\noindent where $\mathbf{DSA}_S$ is the time to execute the digital signature algorithm.
+		
+				
+		\textbf{Server:} 1 multiplication in $\Gzero$, 1 multiplication in $\Gone$ (BLS signature in each source group) and one standard digital signature verification. Identification tokens introduce 4 additional pairing operations (\autoref{eq:token0}, \autoref{eq:token1}). We express the time spent by each server on computations for the setup phase as a function of $N$:
+		\begin{equation}
+			\mathrm{comp}_{\mathrm{setup, server}}(N) = N(4\mathbf{p} + \mathbf{mul}_{\Gzero} + \mathbf{mul}_{\Gone} + \mathbf{DSA}_V)
+		\end{equation}
+		\noindent where $\mathbf{DSA}_V$ is the time to verify the digital signature.
+	\end{quote}
+	
+	\paragraph{} Assuming we are using curve BN381\_1 and using realistic values for $\mathbf{DSA}_S$ and $\mathbf{DSA}_V$ on a mobile device (respectively $0.82$ ms and $3.02$ ms \cite{WolfSSl}) yields:
+	\begin{equation}
+		\mathrm{comp}_{\mathrm{setup, user}}(t) = 76.66 \mathrm{ms} \quad \mathrm{and} \quad \mathrm{comp}_{\mathrm{setup, server}}(N) = 57.22 \mathrm{ms}
+	\end{equation}
+	
+	\noindent For a threshold of servers set to $6$, a single user can complete the setup phase while spending less than 0.5 seconds performing local computations. Similarly, servers can setup a new user within tens of milliseconds. Launching our discovery service for an application with 10 million users can be done with slightly more than one day of serial computations. However, with no optimisations, an application with one billion users would require a roll out period of almost two years.
+	
+	\paragraph{} In order to render the service practical for widely used applications, we must investigate methods to optimise the server-side setup process. The most costly operation performed by the server are the verifications of the identity tokens. These are in fact verification of BLS signatures, which can be aggregated to reduce the number of pairing operations needed \cite{BLSagg}. We can establish optimal batching strategies by placing assumptions on the rate of false signatures; however, such strategies are outside of the scope of this report. Promising approaches to establishing an optimal strategy may come from other fields of research \cite{covid}. 
+	
+	\subsubsection{Computational cost: Shared key derivation}
+	
+	\paragraph{} We now consider the local key derivation phase on a per-contact basis, before investigating how computations scale with the number of contacts $N_c$. A user must perform two evaluations of a left/right constrained PRF. Under our construction, this amounts to performing one hash to each source group and two pairing operations. Thus:
+	\begin{equation}
+		\mathrm{comp}_{\mathrm{key, user}}(N_c) = N_c(2\mathbf{p} + \mathbf{hash}_{\Gzero} + \mathbf{hash}_{\Gone})
+	\end{equation}
+
+	\paragraph{} Using the values from curve BN381\_1 in \autoref{table:benchmarks} yields  a very fast $34\mathrm{ms}$ per address book entry. Thus an initial computation over an address book of one thousand entries would only require 34 seconds of computations.
+	
+	\subsubsection{Concluding remarks}
+	
+	\paragraph{} The discovery phase makes use of standard cryptographic operations and is of lesser interest when estimating the computational costs of our scheme. However, a similar analysis of the scheme can be performed for communication costs. These are largely dependent on the type of mobile network that is being used as well as the availability of the servers and the online cache. We do not perform this analysis in our report, however we wish to emphasise that our scheme requires very few communications rounds to complete all three phases.
+	
+	
+	\paragraph{} Overall, we have seen that all computations grow linearly with respect to their inputs. Using realistic numbers of registered users, we have seen that our service may be immediately applicable to relatively popular applications (in the range of tens of millions of users). For more popular applications such as WhatsApp, our system will require optimisations of the server-side setup process. Under our construction of the left/right constrained PRF, the most promising approach is to batch token verifications to reduce the number of pairing operations required. 
+	
+ 	
+
+
 \section{Applications}
 \label{sec:applications}
+
+\paragraph{} To conclude this chapter on our system's architecture, we provide a brief overview of its possible integrations into existing mobile applications. We first focus on Signal, an end-to-end encrypted messaging service. We then consider the integration with a decentralised payment system such as Celo.
 
 	\subsection{End-to-end encrypted messaging}
 	
 	\subsection{Mobile-first cryptocurrencies}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
