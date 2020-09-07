@@ -1,1 +1,37 @@
-\chapter{Code}
+\chapter{Proof-of-Concept: full code listing}
+\label{app:code}
+
+\lstset{captionpos=t}
+
+\newcommand{\ImportGo}[1]{\lstinputlisting[language=Go, caption={#1}]{cd_client/#1.go}\vspace{2cm}}
+\newcommand{\ImportGoTest}[1]{\lstinputlisting[language=Go, caption={#1\_test}]{cd_client/#1_test.go}\vspace{2cm}}
+\newcommand{\ImportGoWithTest}[1]{\lstinputlisting[language=Go, caption={#1.go}]{cd_client/#1.go}\vspace{2cm} \lstinputlisting[language=Go, caption={#1\_test.go}]{cd_client/#1_test.go}\vspace{2cm}}
+
+\section{Package \texttt{hash}}
+\ImportGoWithTest{hash/hashing}
+
+\section{Package \texttt{morebls}}
+\ImportGoWithTest{morebls/morebls}
+
+
+\section{Package \texttt{moretbls}}
+\ImportGoWithTest{moretbls/moretbls}
+
+\section{Package \texttt{blindbls}}
+\ImportGoWithTest{blindbls/blindbls}
+
+\section{Package \texttt{blindtbls}}
+\label{app:blindtbls}
+\ImportGoWithTest{blindtbls/adapter}
+\ImportGoWithTest{blindtbls/blindtbls}
+
+
+
+\section{Package \texttt{main}}
+\lstinputlisting[language=Go, caption={go.mod}]{cd_client/go.mod}\vspace{2cm}
+\ImportGoWithTest{main}
+\ImportGo{user}
+\ImportGo{server}
+\ImportGoWithTest{crypto}
+\ImportGoWithTest{hashing}
+\ImportGo{ipfs}
