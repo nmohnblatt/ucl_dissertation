@@ -2,13 +2,13 @@
 \label{chap:system}
 
 % TODO redo structure
-\paragraph{} In this chapter we present the architecture for our contact discovery scheme (\autoref{sec:architecture}). We then provide outlines of security proofs (\autoref{sec:security}), theoretical performance evaluations (\autoref{sec:performance}) and show how our system maps onto real-world applications such as end-to-end encrypted messaging and mobile-first cryptocurrencies (\autoref{sec:applications}).
+\paragraph{} In this chapter we present the architecture for our contact discovery scheme (\autoref{sec:architecture}). We then provide outlines of security proofs (\autoref{sec:security}), theoretical performance evaluations and estimates (\autoref{sec:performance}) and, show how our system maps onto real-world applications such as end-to-end encrypted messaging and mobile-first cryptocurrencies (\autoref{sec:applications}).
 
 
 \section{Formal problem statement}
 \label{sec:probstatement}
 
-\paragraph{} First, we provide a formal definition for the problem of contact discovery. User $A$ is registered to a third-party application from which she receives an opaque account identifier $\acc_A$, an address $\addr_A$ and a secret/public key pair $(\sk_A,\pk_A)$. User $A$ also holds a human-readable discovery identifier $\id_A$ (mobile phone number or an email-address) and a list of contacts. We represent $A$'s address book as a set of discovery identifiers $\contacts{A}$. We assume that users exchanged discovery identifiers through out-of-bound communication but are unable to exchange cryptographic material, including their public keys and addresses. Thus for all users $B$ such that $\id_B \in \contacts{A}$ and $\id_A \in\ \contacts{B}$, $A$ wishes to learn the tuple $(\addr_B, \pk_B)$.
+\paragraph{} First, we provide a formal definition for the problem of contact discovery. User $A$ is registered to a third-party application from which she receives an opaque account identifier $\acc_A$, an address $\addr_A$ and a secret/public key pair $(\sk_A,\pk_A)$. User $A$ also holds a human-readable discovery identifier $\id_A$ (mobile phone number or an email-address) and a list of contacts. We represent $A$'s address book as a set of discovery identifiers $\contacts{A}$. We assume that users exchanged discovery identifiers through out-of-bound communication but are unable to exchange cryptographic material, including their public keys and addresses. Thus for all users $B$ such that $\id_B \in \contacts{A}$ and $\id_A \in\ \contacts{B}$, $A$ wishes to learn the tuple $(\addr_B, \pk_B)$ and $B$ the tuple $(\addr_A, \pk_A)$.
 
 \section{Service architecture}
 \label{sec:architecture}
@@ -49,7 +49,7 @@
 			\item $\mathbf{KDF}$ is a public, deterministic key derivation function.
 			\item $\BTBLS$ is a blind $(t,n)$-threshold BLS signature scheme (see definition \autoref{def:BTBLS}). We denote this scheme's algorithms as $\BTBLS . \Keygen$, $\BTBLS . \Sign$, \textit{etc...} 
 			\item $\SIG$ is a strong existentially unforgeable signature scheme which makes use of the third-party provided user keys $(\sk_A,\pk_A)$ and is composed of algorithms $\SIG . \Sign$ and $\SIG . \Verif$.
-			\item The master secret key is set to an integer $s \in \mathbb{Z}_q$ chosen uniformly at random. We define two corresponding master public keys ${g_0}^s$ and ${g_1}^s$, for which there exists $i$ public shares denoted as ${g_0}^{s_i}$ and ${g_1}^{s_i}$ respectively.
+			\item The master secret key is set to an integer $s \in \mathbb{Z}_q$ chosen uniformly at random. We define two corresponding master public keys ${g_0}^s$ and ${g_1}^s$, for which there exists $n$ public shares. We denote the $i$-th shares as ${g_0}^{s_i}$ and ${g_1}^{s_i}$.
 			\item Let $n$ the number of servers ($n=|\mathcal{S}|$)) and $t$ a fixed threshold such that $1 \leq t \leq n$, we assume that the master secret key is shared according to a secure $t$-out-of-$n$ secret sharing scheme and that no single entity holds the master secret key.
 		\end{itemize}
 
@@ -84,12 +84,12 @@
 			\item $\mathbf{Read}(f_{BA})$: retrieve the key-value pair $(H(f_{BA}), c_{BA})$. If $B$ has already run the discovery phase of our scheme then $c_{BA} = \enc_{k_{BA}}(\pk_B||\addr_B)$. Decrypt $c_{BA}$ using the key $k_{AB} = k_{BA}$.
 		\end{itemize}
 		
-		\paragraph{} Using these two operations, $A$ is able to leave a message for $B$ to find ($\mathbf{Write}$) and check whether $B$ has previously completed the contact matching process ($\mathbf{Read}$ at the address $H(f_{BA})$). Both users regularly check the relevant memory locations for a message. Once both users have completed the contact discovery process, they will hold each other's public keys and address, allowing them to communicate securely.
+		\paragraph{} Using these two operations, $A$ is able to leave a message for $B$ to find ($\mathbf{Write}(f_{AB})$) and check whether $B$ has previously completed the contact matching process ($\mathbf{Read}(f_{BA})$). Both users regularly check the relevant memory locations for a message. Once both users have completed the contact discovery process, they will hold each other's public keys and address, allowing them to communicate securely.
 	
 	\subsection{Setup}
 	\label{sec:setup}
 		
-		\paragraph{}  The setup stage serves to provide user $A$ with the constraining keys $k_{\id_A,\mathrm{LEFT}}$ and $k_{\id_A,\mathrm{RIGHT}}$. Consequently, the setup is a security-critical task. As we have shown in \autoref{eq:constrkeys}, under our construction of $F$ the constraining keys can be expressed as:
+		\paragraph{}  The setup stage provides user $A$ with the constraining keys $k_{\id_A,\mathrm{LEFT}}$ and $k_{\id_A,\mathrm{RIGHT}}$. Consequently, the setup is a security-critical task. As we have shown in \autoref{eq:constrkeys}, under our construction of $F$ the constraining keys can be expressed as:
 		\begin{equation}
 			k_{\id_A,\mathrm{LEFT}} = H_0(\id_A)^s \quad \mathrm{and} \quad k_{\id_A,\mathrm{RIGHT}} = H_1(\id_A)^s
 		\end{equation}
@@ -117,7 +117,7 @@
 		\end{enumerate}
 		
 	
-	\noindent $A$ repeats the above procedure with at least $t$ servers. Using the obtained signature shares, $A$ can recover the full signatures $H_0(\id_A)^s$ and $H_1(\id_A)^s$ using $\BTBLS.\Combine$.
+	\noindent $A$ repeats the above procedure with at least $t$ servers. Using the obtained signature shares, $A$ can recover the full signatures $H_0(\id_A)^s$ and $H_1(\id_A)^s$ using $\BTBLS.\Combine$ in both variants of the signature scheme.
 	
 	
 	\paragraph{} This completes our description of the contact discovery scheme. We have seen how the setup process allows users to obtain their private constraining keys. Using those keys, users can locally and asynchronously derive shared key material with their contacts by evaluating a left/right constrained PRF at specific points. Finally, using the shared key material, users can leave and read messages from an untrusted online cache, thus completing the contact discovery process.
@@ -201,7 +201,7 @@
 			
 			When $\adv$ issues a query to $H_0(x)$, $\bdv$ chooses a consistent random $\widehat x \sample \mathbb{Z}_q$ and sets $H_0(x) \leftarrow {g_0}^{\widehat x}$. To one of $\adv$'s queries to $H_0$ which we denote $x^*$, $\bdv$ responds with $H_0(x^*) \leftarrow v_0$. Queries to $H_1$ are answered in a similar fashion where one query is responded to with $H_1(y^*) \leftarrow w_1$. Using these values, queries to $F.\mathsf{constrain}(x,LEFT)$ where $x\neq x^*$ are answered with $k_{x,LEFT} \leftarrow  {u_0}^{\widehat x}$. Notice that as required
 				$$ {u_0}^{\widehat x} = ({g_0}^\alpha)^{\widehat x} = {g_0}^{\alpha \widehat x} = ({g_0}^{\widehat x})^{\alpha} = H_0(x)^\alpha$$
-			Similarly, queries to $F.\mathsf{constrain}(y,RIGHT)$ where $y\neq y^*$ are answered with $k_{y,RIGHT} \leftarrow  {u_1}^{\widehat y}$. Queries to $F.\mathsf{eval}(x,y)$ are answered for $x \neq x^*$ or $y \neq y^*$ by building the constraining keys as it is done for the $F.\mathsf{constrain}$ oracle. Notice that $\bdv$ does not hold the values $\beta,\gamma$ and is therefore unable to answer queries to the $F.\mathsf{constrain}$ oracle for $(x^*, LEFT)$ and $(y^*, RIGHT)$, nor can it answer the $F.\mathsf{eval}$ query for $(x^*,y^*)$. This is in fact equivalent to starting Attack Game \autoref{att:lrPRF} with the set $C$ initialised to $\{(x^*,y^*)\}$. \\
+			Similarly, queries to $F.\mathsf{constrain}(y,RIGHT)$ where $y\neq y^*$ are answered with $k_{y,RIGHT} \leftarrow  {u_1}^{\widehat y}$. Queries to $F.\mathsf{eval}(x,y)$ are answered for $x \neq x^*$ and $y \neq y^*$ by building a constraining keys as it is done for the $F.\mathsf{constrain}$ oracle. Notice that $\bdv$ does not hold the values $\beta,\gamma$ and is therefore unable to answer queries to the $F.\mathsf{constrain}$ oracle for $(x^*, LEFT)$ and $(y^*, RIGHT)$, nor can it answer the $F.\mathsf{eval}$ query for $(x^*,y^*)$. This is in fact equivalent to starting Attack Game \autoref{att:lrPRF} with the set $C$ initialised to $\{(x^*,y^*)\}$. \\
 			
 			After $n$ queries to the $H_0$ oracle and $m$ queries to the $H_1$ oracle, $\adv$ will hold at most $n \times m$ pairs on which it could challenge.	 Some of these pairs may have been added to the set $V$ due to queries to $F.\mathsf{constrain}$ and $F.\mathsf{eval}$, and thus become ineligible for challenging. However, since the experiment started with $C = \{(x^*,y^*)\}$, we can be sure that $(x^*,y^*)$ is an eligible pair (remember that the attack game maintains the invariant $C \cap V = \emptyset$). Therefore, $\adv$ will challenge the pair $(x^*,y^*)$ with probability $p \geq \frac{1}{n\times m}$, to which $\bdv$ answers with $\Smallz{b}$. 
 			
@@ -223,7 +223,7 @@
 
 \subsubsection{Forging a BLS signature}
 
-\paragraph{} As we have seen in \autoref{sec:setup}, the service generates constraining keys by signing a user's discovery identifier. The signing algorithm is a blind $(t,n)$-threshold BLS algorithm. As per \autoref{th:blsforge}, the BLS signature is existentially unforgeable against chosen message attacks under the co-Computational Diffie Hellman assumption. This assumption is in fact a weaker than the DBDH assumption which is required for the left/right constrained PRF security.
+\paragraph{} As we have seen in \autoref{sec:setup}, the service generates constraining keys by signing a user's discovery identifier. The signing algorithm is a blind $(t,n)$-threshold BLS algorithm. As per \autoref{th:blsforge}, the BLS signature is existentially unforgeable against chosen message attacks under the co-Computational Diffie Hellman assumption. This assumption is in fact weaker than the DBDH assumption which is required for the security left/right constrained PRF construction.
 
 
 \subsubsection{Impersonating a user}
@@ -258,7 +258,7 @@
 	\paragraph{} Should only one of the constraining keys leak, the attacker will only be able to perform a subset of the actions above. Indeed, obtaining a $LEFT$ key only allows to compute $f_{AX}$. The attacker will therefore only be able to perform action (c). Similarly, obtaining only a $RIGHT$ key limits the attacker's possibilities to (a). In either case, these breaches represent a complete loss of privacy. Finally, obtaining the master secret key allows to compute any constraining key, thus allowing to perform the above operations for any pair of users.
 
 
-\section{Theoretical performance evaluation}
+\section{Performance evaluation and estimates}
 \label{sec:performance}
 
 
@@ -293,9 +293,23 @@
 		\mathrm{comp}_{\mathrm{setup, server}}(N) &= 36.98\times N &\mathrm{ms}
 	\end{alignat}
 	
-	\noindent For a threshold of servers set to $6$, a single user can complete the setup phase while spending less than 0.5 seconds performing local computations. Similarly, servers can setup a new user within tens of milliseconds. Launching our discovery service for an application with 10 million users can be done with slightly more 4 days of serial computations on a single Inter Core i7 processor. However, with no optimisations, an application with one billion users would require a roll out period of more than one year (approximately 1.2 years).
+	\noindent For a threshold of servers arbitrarily set to $6$, a single user can complete the setup phase while spending less than 0.5 seconds performing local computations. Similarly, each server can setup a new user within tens of milliseconds. Launching our discovery service for an application with 10 million users can be done with slightly more 4 days of serial computations on a single Inter Core i7 processor. However, with no optimisations, an application with one billion users would require a roll out period of more than one year (approximately 1.2 years).
 	
-	\paragraph{} In order to render the service practical for widely used applications, we must investigate methods to optimise the server-side setup process. Firstly, processing computations in parallel on multiple, faster processors can reduce the roll out period by a large constant factor. Secondly, we can optimise the cryptographic checks. Indeed, the most costly operations performed by each server are the verifications of the identity tokens. These are in fact verification of BLS signatures, which can be aggregated to reduce the number of pairing operations needed \cite{BLSagg}. We can establish optimal batching strategies by placing assumptions on the rate of false signatures; however, such strategies are outside of the scope of this report. Promising approaches to establishing an optimal strategy may come from other fields of research \cite{covid}. 
+	\paragraph{} In order to render the service practical for widely used applications, we must investigate methods to optimise the server-side setup process. Firstly, processing computations in parallel on multiple, faster processors can reduce the roll out period by a large constant factor. Secondly, we can optimise the cryptographic checks. Indeed, the most costly operations performed by each server are the verifications of the identity tokens. These are in fact verification of BLS signatures, which can be aggregated to reduce the number of pairing operations needed \cite{BLSagg}. 
+	
+	\paragraph{} Identification token aggregation for the BLS scheme with signatures in $\Gzero$ is defined as follows (an equivalent process can be performed for tokens in $\Gone$). For a group of $u$ users  we denote each individual user with the subscript $j$. We momentarily revert to a multiplicative notation for group operations. Let $\widehat \id_j \in \mathbb{Z}_q$ such that $H_0(\id_j) = {g_0}^{\widehat\id_j}$, $\alpha_j$ denote the $j$-th user's blinding factor and $t_j = H_0(\id_j)^v$ denote the $j$-th user's identification token. We aggregate the blinded identification tokens by performing:
+	\begin{equation}
+		t_{agg,0} = \prod_{j=1}^{u} {t_j}^{\alpha_j} = \prod_{j=1}^{u} \left(H_0(\id_j)^v\right)^{\alpha_j} =  \prod_{j=1}^{u} \left(\left({g_0}^{\widehat\id_j}\right)^v\right)^{\alpha_j} = {g_0}^{v\sum_{j = 1}^u \widehat\id_j{\alpha_j}} = \left({g_0}^{\sum_{j = 1}^u \widehat\id_j{\alpha_j}}\right)^v
+	\end{equation}
+	
+	\noindent Similarly, we aggregate the blinded hashed identifiers:
+	\begin{equation}
+		h_{agg,0} = \prod_{j=1}^{u} {H_0(\id_j)}^{\alpha_j} = \prod_{j=1}^{u} \left({g_0}^{\widehat\id_j}\right)^{\alpha_j} = {g_0}^{\sum_{j = 1}^u \widehat\id_j\alpha_j}
+	\end{equation}
+	
+	\noindent Notice that $t_{agg}, h_{agg} \in \Gzero$ and $t_{agg,0} = {h_{agg,0}}^v$. Therefore, we can treat these aggregated values as a single hashed identifier and its corresponding identification token which can be verified using \autoref{eq:token0}. The aggregated token will verify if and only if every token that composes it is correctly formed. When all $u$ tokens are correctly formed, we replace $u$ pairing operations by $u$ group operations in $\Gzero$ and a single pairing. However if as little as one token is malformed, the entire verification fails, thus incurring computational waste.
+	
+	\paragraph{} We can establish optimal batching strategies by placing assumptions on the rate of malformed tokens; however, such strategies are outside the scope of this report. Promising approaches to establishing an optimal strategy may come from other fields of research \cite{covid}. 
 	
 	\subsubsection{Computational cost: Shared key derivation}
 	
@@ -303,8 +317,9 @@
 	\begin{equation}
 		\mathrm{comp}_{\mathrm{key, user}}(N_c) = N_c(2\mathbf{p} + \mathbf{hash}_{\Gzero} + \mathbf{hash}_{\Gone})
 	\end{equation}
+	
 
-	\paragraph{} Using the values from curve BN381\_1 in \autoref{table:benchmarks} yields  a very fast $34\mathrm{ms}$ per address book entry. Thus an initial computation over an address book of one thousand entries would only require 34 seconds of computations.
+	\paragraph{} Using the values from curve BN381\_1 in \autoref{table:benchmarks} yields  a very fast $34\mathrm{ms}$ per address book entry. Thus an initial computation over an address book of one thousand entries would only require 34 seconds.
 	
 	\subsubsection{Concluding remarks}
 	
