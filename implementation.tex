@@ -9,9 +9,9 @@
 
 \section{Local server emulation}
 
-	\paragraph{} To emulate the behaviour of our distributed discovery service, we need to create a \texttt{server} object, perform a distributed key generation (DKG) algorithm and implement BLS signatures in both source groups of an asymmetric pairing. We make use of the \kyber \;library\footnote{\url{https://github.com/dedis/kyber}} to provide most of the cryptographic backend.
+	\paragraph{} To emulate the behaviour of our distributed discovery service, we need to create $n$ \texttt{server} objects, perform a $t$-out-of-$n$ threshold distributed key generation (DKG) algorithm and implement BLS signatures in both source groups of an asymmetric pairing. We make use of the \kyber \;library\footnote{\url{https://github.com/dedis/kyber}} to provide most of the cryptographic backend. This library performs pairing operations on the BN256 elliptic curve.
 	
-	\paragraph{Server representation --} We are performing a local emulation and therefore choose to abstract from networking properties such as a server's address. We however include an \texttt{ID} field that represents any such identifying information. Consequently, our model for a server is as simple as possible: it includes an identifier, a secret key share for the BLS signature scheme in $\Gzero$ and a secret key share for the BLS signature scheme in $\Gone$ (see \autoref{fig:server_def}).
+	\paragraph{Server representation --} We are performing a local emulation and therefore choose to abstract from network properties such as a server's address. We however include an \texttt{ID} field that represents any such identifying information. Consequently, our model for a server is as simple as possible: it includes an identifier, a secret key share for the BLS signature scheme in $\Gzero$ and a secret key share for the BLS signature scheme in $\Gone$ (see \autoref{fig:server_def}).
 	
 	\begin{figure}[H]
 		\begin{center}
@@ -27,7 +27,7 @@
 		\end{center}
   	\end{figure}
   	
-  	\paragraph{Distributed Key Generation --} Rather than performing a distributed key generation algorithm, we assume the existence of a trusted dealer and perform key distribution by sharing a random secret (see \autoref{fig:key_distrib}). As DKG algorithms are not the primary focus of our report, this assumption allows for a simple setup for our proof-of-concept implementation. We perform secret sharing using \kyber's \texttt{share} package.
+  	\paragraph{Distributed Key Generation --} Rather than performing a distributed key generation algorithm, we assume the existence of a trusted dealer and perform key distribution by sharing a random secret (see \autoref{fig:key_distrib}). As DKG algorithms are not the primary focus of our report, this assumption allows for a simple setup for our proof-of-concept implementation. We perform secret sharing using \kyber's \texttt{share} package. Finally, for testing purposes, we have hard-coded a master secret key, thus allowing experiments to be reproducible. 
   	
   	\begin{figure}[H]
 		\begin{center}
@@ -58,14 +58,16 @@ func setupThresholdServers(suite pairing.Suite, secret kyber.Scalar, n, t int) (
 		\end{center}
 	\end{figure}
 
-  	\paragraph{Blind $(t,n)$-threshold BLS --} Finally, we implement blind $(t,n)$-threshold BLS signature schemes in both variants (with signatures in $\Gzero$ and in $\Gone$). The \kyber\;library only allows signatures in $\Gzero$ and takes messages as inputs. As such, we are unable to manipulate hashes of those messages; more specifically we are unable to blind and unblind our messages. We therefore implement a slight variant of the existing library to allow for blinding and introduce the necessary functions to performs BLS signatures on elements of $\Gone$. We do not however implement a secure hash-to-$\Gone$ as should be the case in a production-grade service.
-  	% TODO code for blind tbls
+
+  	\paragraph{Blind $(t,n)$-threshold BLS --} Finally, we implement blind $(t,n)$-threshold BLS signature schemes in both variants (with signatures in $\Gzero$ and in $\Gone$). The \kyber\;library only allows signatures in $\Gzero$ and takes messages as inputs. As such, we are unable to manipulate hashes of those messages; more specifically we are unable to blind and unblind our messages. We therefore implement a slight variant of the existing library to allow for blinding and introduce the necessary functions to performs BLS signatures on elements of $\Gone$  (see packages \hyperref[app:morebls]{\texttt{morebls}} , \hyperref[app:moretbls]{\texttt{moretbls}}, \hyperref[app:blindbls]{\texttt{blindbls}}, \hyperref[app:blindtbls]{\texttt{blindtbls}} in \autoref{app:code}). We do not however implement a secure hash-to-$\Gone$ as should be the case in a production-grade service.
   	
-  	\paragraph{} Using the above setup, clients are able to send their blinded discovery identifiers to any of the $n$ emulated servers (see \autoref{app:code}, \autoref{app:blindtbls}). The servers respond by providing a BLS signature using their private key shares. Users therefore receive their constraining keys as expected. We do not however implement many of the identity checks that are required to provide a secure setup.
+  	\paragraph{} Using the above setup, clients are able to send their blinded discovery identifiers to any of the $n$ emulated servers. The servers respond by providing a BLS signature using their private key shares (see lines 68--74 of \autoref{lst:server} in \autoref{app:code}). We do not however implement many of the identity checks that are required to provide a secure setup.
   	
+  	
+  	  	
 \section{User-facing client application}
 
-	\paragraph{Users --} We consider that each user will run an instance of our code. Users are therefore prompted to enter their discovery identifier upon first launch. This identifier is then hashed to both source groups to produce public keys \texttt{pk1} and \texttt{pk2}. Once the user completes the setup process, she will receive her left and right constraining keys. We call these the user's secret keys \texttt{sk1} ans \texttt{sk2} to emphasise the fact that both keys must remain private at all times. Users are therefore represented using the data structure shown in \autoref{fig:user_def}.
+	\paragraph{Users --} We consider that each user runs an instance of our client application presented here. Users are therefore prompted to enter their discovery identifier upon first launch. This identifier is then hashed to both source groups to produce public keys \texttt{pk1} and \texttt{pk2}. Once the user completes the setup process, she will receive her left and right constraining keys. We call these the user's secret keys \texttt{sk1} ans \texttt{sk2} to emphasise the fact that both keys must remain private at all times. Users are therefore represented using the data structure shown in \autoref{fig:user_def}.
 	
 	\begin{figure}[H]
 	\begin{center}
@@ -82,7 +84,7 @@ func setupThresholdServers(suite pairing.Suite, secret kyber.Scalar, n, t int) (
 \end{figure}
 
 
-	\paragraph{User setup --} Upon launching the application, users receive a list of available servers and the setup threshold $t$. The client application performs the setup process by interacting with $t$ servers of its choice. Each interaction consists of blinding the user's public keys, verifying the received signature and unblinding it to store shares of the constraining keys. When enough shares are gathered, the client application runs the $\Combine$ algorithms from each of the two threshold BLS schemes.
+	\paragraph{User setup --} Upon launching the application, users receive a list of available servers and the setup threshold $t$. The client application performs the setup process by interacting with $t$ servers of its choice. Each interaction consists of blinding the user's public keys, verifying the received signature and unblinding it to store shares of the constraining keys. When enough shares are gathered, the client application runs the $\Combine$ algorithms from each of the two threshold BLS schemes (see lines 108--173 of \autoref{lst:user} in \autoref{app:code}).
 
 
 
@@ -113,16 +115,18 @@ func setupThresholdServers(suite pairing.Suite, secret kyber.Scalar, n, t int) (
 
 	\paragraph{} The final step required to successfully perform contact discovery is to establish an online meeting point. As mentioned above, the IPFS is not originally a key-value store. We therefore a develop another approach to the discovery phase which slightly differs from that presented in \autoref{chap:system}.
 	
-	\paragraph{} The IPFS is a content-addressed storage system where the location of an object is its hash. Therefore, we modify the discovery phase such that both parties $A$ and $B$, can compute two pieces of unique, secret content $c_{AB}$ and $c_{BA}$. These are in fact ciphertexts under the symmetric key $k_{AB} = k_{BA}$ for standardised plaintexts such that both users can locally compute them. To check whether $B$ is registered to an application, $A$ can check whether $c_{BA}$ is available on the IPFS. Similarly, $B$ can check for the presence of $c_{AB}$. Notice however that we cannot encrypt information that is not shared between $A$ and $B$. Indeed, doing so would mean that one of the two parties is unable to compute the hash --- and therefore the IPFS address --- of one of the ciphertexts. As a result, this simplified method does not allow to transfer information during the contact discovery phase. Users may only receive and send binary information by uploading or withholding their ciphertexts.
+	\paragraph{} The IPFS is a content-addressed storage system in which the location of an object is its hash. Therefore, we modify the discovery phase such that both parties $A$ and $B$, can compute two pieces of unique, secret content $c_{AB}$ and $c_{BA}$. These are in fact ciphertexts under the symmetric key $k_{AB} = k_{BA}$ for standardised plaintexts such that both users can locally compute them. To check whether $B$ is registered to an application, $A$ can check whether $c_{BA}$ is available on the IPFS. Similarly, $B$ can check for the presence of $c_{AB}$. Notice however that we cannot encrypt information that is not shared between $A$ and $B$. Indeed, doing so would mean that one of the two parties is unable to compute the hash --- and therefore the IPFS address --- of one of the ciphertexts. As a result, this simplified method does not allow to transfer information during the contact discovery phase. Users may only receive and send binary information by uploading or withholding their ciphertexts.
 	
-	\paragraph{} The IPFS provides simple command-line tools to upload and access files from its peer-to-peer network. Using these tools, $A$ uploads $c_{AB}$ and tries to retrieve $c_{BA}$. If the file is available, $A$ knows $B$ is a registered user. Otherwise, the IPFS instruction will time out and $A$ will learn that $B$ is not registered.
-	
-	\paragraph{} This process implies that $c_{AB}$ and $c_{BA}$ must remain available on the IPFS network regardless of either users' connection status. Fortunately, the IPFS implements a ``pinning'' mechanism to ensure that files are stored by more than one node.
+	\paragraph{} The IPFS provides simple command-line tools to upload and access files from its peer-to-peer network. Using these tools, $A$ uploads $c_{AB}$ and tries to retrieve $c_{BA}$. If the file is available, $A$ knows $B$ is a registered user. Otherwise, the IPFS instruction will time out and $A$ will learn that $B$ is not registered. This process implies that $c_{AB}$ and $c_{BA}$ must remain available on the IPFS network regardless of either users' connection status. Fortunately, the IPFS implements a ``pinning'' mechanism to ensure that files are stored by more than one node.
 
 
-\section{Results}
+\section{Observations and further steps}
 
-\paragraph{} 
+
+\paragraph{} This simple proof-of-concept application demonstrates the feasibility of a contact discovery scheme built according to our architecture. As expected, our implementation allows users to obtain constraining keys by gathering and combining blind BLS signatures on their discovery identifiers. The key derivation step provides consistent shared key material between two users that know each other's discovery identifier. Finally, we have shown that the shared key material can be used to establish contact online.
+
+
+\paragraph{} The next step in demonstrating the feasibility of our architecture is benchmarking. To do so, we wish to develop a server-side application that runs online and integrate our discovery scheme in a custom-modified mobile application such as Signal or Celo's mobile clients. This test-bed will allow us to measure the scheme's cost in terms of computations, battery requirements and time in real-world conditions.
 
 
 

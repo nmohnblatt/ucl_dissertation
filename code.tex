@@ -3,21 +3,33 @@
 
 \lstset{captionpos=t}
 
-\newcommand{\ImportGo}[1]{\lstinputlisting[language=Go, caption={#1}]{cd_client/#1.go}\vspace{2cm}}
-\newcommand{\ImportGoTest}[1]{\lstinputlisting[language=Go, caption={#1\_test}]{cd_client/#1_test.go}\vspace{2cm}}
-\newcommand{\ImportGoWithTest}[1]{\lstinputlisting[language=Go, caption={#1.go}]{cd_client/#1.go}\vspace{2cm} \lstinputlisting[language=Go, caption={#1\_test.go}]{cd_client/#1_test.go}\vspace{2cm}}
+\newcommand{\ImportGo}[1]{\lstinputlisting[language=Go, caption={#1.go}, label={lst:#1}]{cd_client/#1.go}\vspace{2cm}}
+\newcommand{\ImportGoTest}[1]{\lstinputlisting[language=Go, caption={#1\_test}, label={lst:#1_test}]{cd_client/#1_test.go}\vspace{2cm}}
+\newcommand{\ImportGoWithTest}[1]{\lstinputlisting[language=Go, caption={#1.go}, label={lst:#1}]{cd_client/#1.go}\vspace{2cm}  \lstinputlisting[language=Go, caption={#1\_test.go}, label={lst:#1_test}]{cd_client/#1_test.go} \vspace{2cm}}
+
+
+The full code and documentation are available at \url{www.github.com/nmohnblatt/cd_client}. As a requirement for the degree of MSc Information Security at University College London, the full code is also listed below.
+
+%\lstlistoflistings
+
+
+\section{README.md}
+\lstinputlisting[caption=README.md]{cd_client/README.md}
 
 \section{Package \texttt{hash}}
 \ImportGoWithTest{hash/hashing}
 
 \section{Package \texttt{morebls}}
+\label{app:morebls}
 \ImportGoWithTest{morebls/morebls}
 
 
 \section{Package \texttt{moretbls}}
+\label{app:moretbls}
 \ImportGoWithTest{moretbls/moretbls}
 
 \section{Package \texttt{blindbls}}
+\label{app:blindbls}
 \ImportGoWithTest{blindbls/blindbls}
 
 \section{Package \texttt{blindtbls}}
@@ -30,8 +42,10 @@
 \section{Package \texttt{main}}
 \lstinputlisting[language=Go, caption={go.mod}]{cd_client/go.mod}\vspace{2cm}
 \ImportGoWithTest{main}
-\ImportGo{user}
-\ImportGo{server}
+%\ImportGo{user}
+\lstinputlisting[language=Go, caption={user.go}, label={lst:user}]{cd_client/user.go}\vspace{2cm}
+%\ImportGo{server}
+\lstinputlisting[language=Go, caption={server.go}, label={lst:server}]{cd_client/server.go}\vspace{2cm}
 \ImportGoWithTest{crypto}
 \ImportGoWithTest{hashing}
 \ImportGo{ipfs}
