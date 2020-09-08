@@ -59,7 +59,7 @@ func setupThresholdServers(suite pairing.Suite, secret kyber.Scalar, n, t int) (
 	\end{figure}
 
 
-  	\paragraph{Blind $(t,n)$-threshold BLS --} Finally, we implement blind $(t,n)$-threshold BLS signature schemes in both variants (with signatures in $\Gzero$ and in $\Gone$). The \kyber\;library only allows signatures in $\Gzero$ and takes messages as inputs. As such, we are unable to manipulate hashes of those messages; more specifically we are unable to blind and unblind our messages. We therefore implement a slight variant of the existing library to allow for blinding and introduce the necessary functions to performs BLS signatures on elements of $\Gone$  (see packages \hyperref[app:morebls]{\texttt{morebls}} , \hyperref[app:moretbls]{\texttt{moretbls}}, \hyperref[app:blindbls]{\texttt{blindbls}}, \hyperref[app:blindtbls]{\texttt{blindtbls}} in \autoref{app:code}). We do not however implement a secure hash-to-$\Gone$ as should be the case in a production-grade service.
+  	\paragraph{Blind $(t,n)$-threshold BLS --} To complete our server emulation, we implement blind $(t,n)$-threshold BLS signature schemes in both variants (with signatures in $\Gzero$ and in $\Gone$). The \kyber\;library only allows signatures in $\Gzero$ and takes messages as inputs to its signing algorithm. As such, we are unable to manipulate hashes of those messages; more specifically we are unable to blind and unblind our messages. We therefore implement a slight variant of the existing library to allow for blinding and introduce the necessary functions to performs BLS signatures on elements of $\Gone$  (see packages \hyperref[app:morebls]{\texttt{morebls}} , \hyperref[app:moretbls]{\texttt{moretbls}}, \hyperref[app:blindbls]{\texttt{blindbls}}, \hyperref[app:blindtbls]{\texttt{blindtbls}} in \autoref{app:code}). We do not however implement a secure hash-to-$\Gone$ method as should be the case in a production-grade service.
   	
   	\paragraph{} Using the above setup, clients are able to send their blinded discovery identifiers to any of the $n$ emulated servers. The servers respond by providing a BLS signature using their private key shares (see lines 68--74 of \autoref{lst:server} in \autoref{app:code}). We do not however implement many of the identity checks that are required to provide a secure setup.
   	
@@ -72,11 +72,11 @@ func setupThresholdServers(suite pairing.Suite, secret kyber.Scalar, n, t int) (
 	\begin{figure}[H]
 	\begin{center}
 		\begin{lstlisting}
-			type user struct {
-				name               string
-				phoneNumber        string
-				pk1, pk2, sk1, sk2 kyber.Point
-			}
+	type user struct {
+		name               string
+		phoneNumber        string
+		pk1, pk2, sk1, sk2 kyber.Point
+	}
 		\end{lstlisting}
 	\caption{Implementation: definition of a user}
 	\label{fig:user_def}
@@ -113,11 +113,11 @@ func setupThresholdServers(suite pairing.Suite, secret kyber.Scalar, n, t int) (
 
 \section{Online meeting point via IPFS}
 
-	\paragraph{} The final step required to successfully perform contact discovery is to establish an online meeting point. As mentioned above, the IPFS is not originally a key-value store. We therefore a develop another approach to the discovery phase which slightly differs from that presented in \autoref{chap:system}.
+	\paragraph{} The final step required to successfully perform contact discovery is to establish an online meeting point. As mentioned above, the IPFS is not originally a key-value store. We therefore develop another approach to the discovery phase which slightly differs from that presented in \autoref{chap:system}.
 	
 	\paragraph{} The IPFS is a content-addressed storage system in which the location of an object is its hash. Therefore, we modify the discovery phase such that both parties $A$ and $B$, can compute two pieces of unique, secret content $c_{AB}$ and $c_{BA}$. These are in fact ciphertexts under the symmetric key $k_{AB} = k_{BA}$ for standardised plaintexts such that both users can locally compute them. To check whether $B$ is registered to an application, $A$ can check whether $c_{BA}$ is available on the IPFS. Similarly, $B$ can check for the presence of $c_{AB}$. Notice however that we cannot encrypt information that is not shared between $A$ and $B$. Indeed, doing so would mean that one of the two parties is unable to compute the hash --- and therefore the IPFS address --- of one of the ciphertexts. As a result, this simplified method does not allow to transfer information during the contact discovery phase. Users may only receive and send binary information by uploading or withholding their ciphertexts.
 	
-	\paragraph{} The IPFS provides simple command-line tools to upload and access files from its peer-to-peer network. Using these tools, $A$ uploads $c_{AB}$ and tries to retrieve $c_{BA}$. If the file is available, $A$ knows $B$ is a registered user. Otherwise, the IPFS instruction will time out and $A$ will learn that $B$ is not registered. This process implies that $c_{AB}$ and $c_{BA}$ must remain available on the IPFS network regardless of either users' connection status. Fortunately, the IPFS implements a ``pinning'' mechanism to ensure that files are stored by more than one node.
+	\paragraph{} The IPFS provides simple command-line tools to upload and access files from its peer-to-peer network. Using these tools, $A$ uploads $c_{AB}$ and tries to retrieve $c_{BA}$. If the file is available, $A$ knows $B$ is a registered user. Otherwise, the IPFS instruction will time out and $A$ will learn that $B$ is not registered. This process implies that $c_{AB}$ and $c_{BA}$ must remain available on the IPFS network regardless of either users' connection status. Fortunately, the IPFS implements a ``pinning'' mechanism to ensure that files are stored by more than one node and made available at all times.
 
 
 \section{Observations and further steps}
@@ -126,7 +126,7 @@ func setupThresholdServers(suite pairing.Suite, secret kyber.Scalar, n, t int) (
 \paragraph{} This simple proof-of-concept application demonstrates the feasibility of a contact discovery scheme built according to our architecture. As expected, our implementation allows users to obtain constraining keys by gathering and combining blind BLS signatures on their discovery identifiers. The key derivation step provides consistent shared key material between two users that know each other's discovery identifier. Finally, we have shown that the shared key material can be used to establish contact online.
 
 
-\paragraph{} The next step in demonstrating the feasibility of our architecture is benchmarking. To do so, we wish to develop a server-side application that runs online and integrate our discovery scheme in a custom-modified mobile application such as Signal or Celo's mobile clients. This test-bed will allow us to measure the scheme's cost in terms of computations, battery requirements and time in real-world conditions.
+\paragraph{} The next step in further demonstrating the feasibility of our architecture is benchmarking. To do so, we wish to develop a server-side application that runs online and integrate our discovery scheme in a custom-modified mobile application such as Signal or Celo's mobile clients. This test-bed will allow us to measure the scheme's cost in terms of computations and communication time as well as battery requirements in real-world conditions.
 
 
 
