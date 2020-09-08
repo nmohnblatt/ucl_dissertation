@@ -1,0 +1,24 @@
+{
+
+\begin{table}[H]
+	\begin{center}
+	\resizebox{0.68\textwidth}{!}{
+		\begin{tabular}{l|c||c|c|c}
+		Operation            		 & Notation 				     & BN254 & BN381\_1  & BN462  \\
+		\hline
+		Pairing           			 & $\mathbf{P}$ 				 &2.446  & 7.353     & 14.596 \\
+		Addition in $\Gzero$ 		 & $\mathbf{ADD}_{\Gzero}$   &0.007  & 0.01      & 0.014  \\
+		Point doubling in $\Gzero$   & $\mathbf{DBL}_{\Gzero}$   &0.005  & 0.007     & 0.011  \\
+		Multiplication in $\Gzero$   & $\mathbf{MUL}_{\Gzero}$   &0.479  & 1.529     & 3.346  \\
+		Addition in $\Gone$ 		     & $\mathbf{ADD}_{\Gone}$    &0.013  & 0.022     & 0.033  \\
+		Point doubling in $\Gone$    & $\mathbf{DBL}_{\Gone}$    &0.01   & 0.016     & 0.025  \\
+		Multiplication in $\Gone$    & $\mathbf{MUL}_{\Gone}$    &0.989  & 2.955     & 5.921  \\
+		Hash to $\Gzero$             & $\mathbf{HASH}_{\Gzero}$  &0.135  & 0.309     & 0.76   \\
+		Hash to $\Gone$              & $\mathbf{HASH}_{\Gone}$   &2.14   & 6.44      & 14.249 \\ 
+		\end{tabular}}
+		\caption{Timing benchmarks for elliptic curve operations over three pairing-friendly curves (BN254, BN381\_1 and BN462) executed on an Intel Core i7 Processor clocked at 3.6GHz running the MCL library for Linux. All timings are given in milliseconds. \cite{MCLBench}}
+		\label{table:benchmarks_server}
+	\end{center}
+\end{table}
+
+}

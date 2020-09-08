@@ -263,10 +263,11 @@
 
 
 
-	\paragraph{} In this section we present a brief evaluation of the scheme's efficiency. Importantly, we show that all computational costs grow linearly with respect to the input size. We estimate the computation time associated with each phase of our discovery scheme using benchmark timings from the mobile-friendly elliptic curve pairing library MCL \cite{MCLLib}. These benchmark tests were performed on an iPhone 7 running iOS 11.2.1, executing operations over three Barreto-Naehrig (BN) elliptic curves with varying security parameters \cite{MCLBench}. The results are summarised in \autoref{table:benchmarks}. Notice that we are now working with elliptic curves and therefore adopt an additive notation for the group operation.
+	\paragraph{} In this section we present a brief evaluation of the scheme's efficiency. Importantly, we show that all computational costs grow linearly with respect to the input size. We estimate the computation time associated with each phase of our discovery scheme using benchmark timings from the elliptic curve pairing library MCL \cite{MCLLib} (see calculations in \autoref{app:perf}). These benchmark tests were performed on an iPhone 7 running iOS 11.2.1 (\autoref{table:benchmarks}) and an Intel Core i7 processor (3.6GHz) running Linux (\autoref{table:benchmarks_server}), executing operations over three Barreto-Naehrig (BN) elliptic curves with varying security parameters \cite{MCLBench}.  Notice that we are now working with elliptic curves and therefore adopt an additive notation for the group operation.
 	
 	\input{tables/pairing_benchmarks}
 	
+	\input{tables/pairing_benchmarks_server}
 	
 	\subsubsection{Computational cost: Setup with identification tokens}
 	
@@ -274,26 +275,27 @@
 	\begin{quote}
 		\textbf{User:} 2 multiplications in $\Gzero$, 2 multiplications in $\Gone$ (blind and unblind identifier), 4 pairing operations (\autoref{eq:usercheck0}, \autoref{eq:usercheck1}), one standard digital signature. Identification tokens introduce one additional multiplication in $\Gzero$, and one multiplication in $\Gone$ (blind tokens). After repeating these operations with enough servers to meet the system's threshold, a user is required to recombine $t$ partial BLS signatures in both $\Gzero$ and $\Gone$. Using Lagrange interpolation, each of these recombinations require $t$ multiplications and $t$ additions in their respective source group. We can now express the time spent by each user on computations for the setup phase as a function of $t$:
 		\begin{equation}
-			\mathrm{comp}_{\mathrm{setup, user}}(t) = t(4(\mathbf{mul}_{\Gzero} + \mathbf{mul}_{\Gone} + \mathbf{p}) + \mathbf{add}_{\Gzero} + \mathbf{add}_{\Gzero} + \mathbf{DSA}_S)
+			\mathrm{comp}_{\mathrm{setup, user}}(t) = t(4(\mathbf{mul}_{\Gzero} + \mathbf{mul}_{\Gone} + \mathbf{p}) + \mathbf{add}_{\Gzero} + \mathbf{add}_{\Gzero} + \mathbf{dsa}_S)
 		\end{equation}
-		\noindent where $\mathbf{DSA}_S$ is the time to execute the digital signature algorithm.
+		\noindent where $\mathbf{dsa}_S$ is the time to execute the digital signature algorithm on a mobile device.
 		
 				
 		\textbf{Server:} 1 multiplication in $\Gzero$, 1 multiplication in $\Gone$ (BLS signature in each source group) and one standard digital signature verification. Identification tokens introduce 4 additional pairing operations (\autoref{eq:token0}, \autoref{eq:token1}). We express the time spent by each server on computations for the setup phase as a function of $N$:
 		\begin{equation}
-			\mathrm{comp}_{\mathrm{setup, server}}(N) = N(4\mathbf{p} + \mathbf{mul}_{\Gzero} + \mathbf{mul}_{\Gone} + \mathbf{DSA}_V)
+			\mathrm{comp}_{\mathrm{setup, server}}(N) = N(4\mathbf{P} + \mathbf{MUL}_{\Gzero} + \mathbf{MUL}_{\Gone} + \mathbf{DSA}_V)
 		\end{equation}
-		\noindent where $\mathbf{DSA}_V$ is the time to verify the digital signature.
+		\noindent where $\mathbf{DSA}_V$ is the time to verify the digital signature on a desktop computer.
 	\end{quote}
 	
-	\paragraph{} Assuming we are using curve BN381\_1 and using realistic values for $\mathbf{DSA}_S$ and $\mathbf{DSA}_V$ on a mobile device (respectively $0.82$ ms and $3.02$ ms \cite{WolfSSl}) yields:
-	\begin{equation}
-		\mathrm{comp}_{\mathrm{setup, user}}(t) = 76.66 \mathrm{ms} \quad \mathrm{and} \quad \mathrm{comp}_{\mathrm{setup, server}}(N) = 57.22 \mathrm{ms}
-	\end{equation}
+	\paragraph{} Assuming we are using curve BN381\_1 and using realistic values for $\mathbf{dsa}_S$ and $\mathbf{DSA}_V$ (respectively $0.82$ ms and $3.02$ ms \cite{WolfSSl}) yields:
+	\begin{alignat}{2}
+		\mathrm{comp}_{\mathrm{setup, user}}(t) &= 76.66 \times t  \qquad &\mathrm{ms} \\
+		\mathrm{comp}_{\mathrm{setup, server}}(N) &= 36.98\times N &\mathrm{ms}
+	\end{alignat}
 	
-	\noindent For a threshold of servers set to $6$, a single user can complete the setup phase while spending less than 0.5 seconds performing local computations. Similarly, servers can setup a new user within tens of milliseconds. Launching our discovery service for an application with 10 million users can be done with slightly more than one day of serial computations. However, with no optimisations, an application with one billion users would require a roll out period of almost two years.
+	\noindent For a threshold of servers set to $6$, a single user can complete the setup phase while spending less than 0.5 seconds performing local computations. Similarly, servers can setup a new user within tens of milliseconds. Launching our discovery service for an application with 10 million users can be done with slightly more 4 days of serial computations on a single Inter Core i7 processor. However, with no optimisations, an application with one billion users would require a roll out period of more than one year (approximately 1.2 years).
 	
-	\paragraph{} In order to render the service practical for widely used applications, we must investigate methods to optimise the server-side setup process. The most costly operation performed by the server are the verifications of the identity tokens. These are in fact verification of BLS signatures, which can be aggregated to reduce the number of pairing operations needed \cite{BLSagg}. We can establish optimal batching strategies by placing assumptions on the rate of false signatures; however, such strategies are outside of the scope of this report. Promising approaches to establishing an optimal strategy may come from other fields of research \cite{covid}. 
+	\paragraph{} In order to render the service practical for widely used applications, we must investigate methods to optimise the server-side setup process. Firstly, processing computations in parallel on multiple, faster processors can reduce the roll out period by a large constant factor. Secondly, we can optimise the cryptographic checks. Indeed, the most costly operations performed by each server are the verifications of the identity tokens. These are in fact verification of BLS signatures, which can be aggregated to reduce the number of pairing operations needed \cite{BLSagg}. We can establish optimal batching strategies by placing assumptions on the rate of false signatures; however, such strategies are outside of the scope of this report. Promising approaches to establishing an optimal strategy may come from other fields of research \cite{covid}. 
 	
 	\subsubsection{Computational cost: Shared key derivation}
 	
