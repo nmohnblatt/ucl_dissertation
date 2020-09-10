@@ -2,7 +2,7 @@
 \label{chap:background}
 
 
-\paragraph{} Before we introduce our system, we recall some definitions of lesser known cryptographic primitives and assumptions. Our aim is to provide the necessary technical background to then discuss our system's architecture. Alternatively, readers may proceed to \autoref{chap:system} and refer back to this section when needed.
+\paragraph{} Before we introduce our system, we recall some definitions of lesser known cryptographic primitives and assumptions. Our aim is to provide the necessary technical background to then discuss our system's architecture. Alternatively, readers may proceed to \autoref{chap:system} and refer back to this chapter when needed.
 
 
 
@@ -31,7 +31,7 @@
 
 \begin{equation}
 	\label{eq:pairing}
-	\forall \alpha, \beta \in \mathbb{Z}_q, \; e({g_0}^\alpha, {g_1}^\beta) = e({g_0}, {g_1})^{\alpha\beta} =e({g_0}^\beta, {g_1}^\alpha)
+	\forall \alpha, \beta \in \mathbb{Z}_q, \; e({g_0}^\alpha, {g_1}^\beta) = e({g_0}, {g_1})^{\alpha\beta}
 \end{equation}
 
 \paragraph{Hard Problems in Pairing Groups --} The existence of pairings has direct consequences on the discrete logarithm, the decisional Diffie-Hellman (DDH) and the computational Diffie-Hellman (CDH) assumptions. Most notably, the existence of a symmetric pairing on $\Gzero$ provides a simple solution to the decisional Diffie Hellman problem. We summarise the effect of pairings on tradition cryptographic assumptions in \autoref{table:problems} below.
@@ -55,8 +55,9 @@
 
 \paragraph{} There exist variants of the DDH and CDH assumptions that take into account the pairing operation: the decisional variant is known as the \textit{decision Bilinear Diffie-Hellman} (DBDH) assumption and the computational variant is known as the \textit{co-Computational Diffie-Hellman} (co-CDH) assumption. We provide formal definitions for both of the assumptions in \autoref{ap:coCDH}.
 
-%TODO ref for implementation
-\paragraph{Implementation --} Pairings have been implemented in practice on certain pairing-friendly elliptic curves. While the underlying constructions are outside of the scope of this project, we wish to emphasise a few of their features. In asymmetric pairings, the group $\Gzero$ is usually built upon a finite field, while groups $\Gone$ and $\Gt$ are built on extensions of that field \cite{BonehShoup}. This implies that elements in $\Gzero$ have a shorter representation than those in $\Gone$ or $\Gt$. Furthermore, operations in $\Gzero$ are less computationally intensive. Finally, a pairing operation is much more computationally intensive than exponentiation in any of the three groups \cite{BonehShoup}.
+
+
+\paragraph{Implementation --} Pairings have been implemented in practice on certain pairing-friendly elliptic curves. While the underlying constructions are outside of the scope of this project, we wish to emphasise a few of their features. In asymmetric pairings, the group $\Gzero$ is usually built upon a finite field, while groups $\Gone$ and $\Gt$ are built on extensions of that field \cite{BonehShoup}. This implies that elements in $\Gzero$ have a shorter representation than those in $\Gone$ or $\Gt$. As a result, operations in $\Gzero$ are less computationally intensive. Finally, a pairing operation is much more computationally intensive than exponentiation in any of the three groups \cite{BonehShoup}.
 
 \section{BLS signatures}
 
@@ -77,7 +78,7 @@
 	Let $e : \Gzero \times \Gone \rightarrow \Gt$ be a pairing, let $\mathcal{M}$ be the message space and let $H: \mathcal{M} \rightarrow \Gzero$ be a hash function. Then the derived BLS signature scheme is \textbf{existentially unforgeable under chosen message attacks} (EUF-CMA) assuming the co-Computational Diffie-Hellman assumption\footnote{see \autoref{ap:coCDH}} holds for $e$, and $H$ is modelled as a random oracle.
 \end{theorem} 
 
-\paragraph{} Blind and/or threshold variants of this scheme exist. The former allows to hide the original message from the signer, while the latter allows to hide the complete signature from any individual (non-colluding) signer. We define a blind $(t,n)$-threshold BLS signature scheme below. Once again, we only present the variant in which signatures are elements of $\Gzero$ and public keys are elements of $\Gone$. 
+\paragraph{} Blind and/or threshold variants of this scheme exist. The former allows to hide the original message from the signer, while the latter allows to hide the full signature of a plain message from any individual (non-colluding) signer. We define a blind $(t,n)$-threshold BLS signature scheme below. Once again, we only present the variant in which signatures are elements of $\Gzero$ and public keys are elements of $\Gone$. 
 
 \begin{definition}[Blind $(t,n)$-threshold BLS Signature]\label{def:BTBLS} A blind $(t,n)$-threshold BLS signature scheme $\mathcal{S}_{BTBLS}$ is composed of six algorithms $\Keygen$, $\Blind$, $\Sign$, $\Combine$, $\Unblind$, $\Verif$. Let $\Gzero, \Gone, \Gt$ be three cyclic groups of prime order $q$ such that there exists a pairing $e : \Gzero \times \Gone \rightarrow \Gt$. $g_0 \in \Gzero$ and $g_1 \in \Gone$ are generators. Let $H_0$ a cryptographic hash function defined as $H_0: \{0,1\}^* \rightarrow \mathbb{G}_0$, we define the six algorithms as:
 	
@@ -85,7 +86,7 @@
 		$\Keygen(\lambda):$ $n$ participants $P_1, P_2, \dots, P_n$ jointly execute a $(t,n)$-distributed key generation algorithm with security parameter $\lambda$ to compute secret key shares $\sk_1, \sk_2, \dots, \sk_n$ and public key $\pk$. Output $\sk_i$ and $\pk$ to $P_i$ and $\pk$ to the message receiver.\\
 		$\Blind(m)$: Choose uniformly at random $\alpha \sample \mathbb{Z}_q$. Output $\sigma_\alpha \leftarrow H_0(m)^\alpha$ and $\alpha$. \\
 		$\Sign(\sk_i, \sigma_\alpha)$: Output the signature $\widehat{\sigma_i} \leftarrow {\sigma_\alpha}^{\sk_i}$. \\
-		$\Combine(\widehat{\sigma_{j_1}}, \widehat{\sigma_{j_2}}, \dots, \widehat{\sigma_{j_t}})$: Use Lagrange interpolation on a subset of $t$ blinded partialn signatures $\widehat{\sigma_{j_1}}, \widehat{\sigma_{j_2}}, \dots, \widehat{\sigma_{j_t}}$ to recover the full blinded signature $\widehat \sigma$. \\
+		$\Combine(\widehat{\sigma_{j_1}}, \widehat{\sigma_{j_2}}, \dots, \widehat{\sigma_{j_t}})$: Use Lagrange interpolation on a subset of $t$ blinded partial signatures $\widehat{\sigma_{j_1}}, \widehat{\sigma_{j_2}}, \dots, \widehat{\sigma_{j_t}}$ to recover the full blinded signature $\widehat \sigma$. \\
 		$\Unblind(\widehat \sigma, \alpha)$: Output $\sigma \leftarrow \widehat \sigma^{(\alpha^{-1})} $ as the full unblinded signature. \\
 		$\Verif(\sigma, m, \pk)$: If $e(\sigma, g_1) = e(H_0(m), \pk)$ accept the signature. Otherwise reject.
 	\end{quote}
@@ -134,7 +135,7 @@ The adversary is then presented with three oracles as follows:
 			\end{equation}
 		\end{secgame}
 		
-		\noindent When experiences EXP(0) and EXP(1) are performed equally many times, an equivalent definition for the adversary's advantage is $\mathrm{AdvPRF_{\adv, F}}(\lambda) = \abs{\frac{1}{2} - \Pr[b' = b]}$. Indeed, using the law of total probability:
+		\noindent When experiments EXP(0) and EXP(1) are performed equally many times (i.e. $\Pr[b=0] = \Pr[b=1] = 0.5$), an equivalent definition for the adversary's advantage is $\mathrm{AdvPRF_{\adv, F}}(\lambda) = \abs{\frac{1}{2} - \Pr[b' = b]}$. Indeed, using the law of total probability:
 		\begin{align}
 				\mathrm{AdvPRF_{\adv, F}}(\lambda) &= \abs{\mathrm{Pr}[W_0] - \mathrm{Pr}[W_1]} \\
 				&= \abs{\Pr[b' = 1 \land b=0] - \Pr[b' = 1 \land b=1]} \\

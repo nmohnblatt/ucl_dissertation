@@ -1,8 +1,8 @@
 \chapter{Proof-of-Concept Implementation}
-\label{implementation}
+\label{chap:implementation}
 
 
-\paragraph{} In this chapter we describe a proof-of-concept implementation of the contact discovery service written in Go. At the time of writing, this proof-of-concept performs setup locally by emulating the behaviour of the distributed discovery service. Key derivation is performed locally as expected. Finally, a meeting point is established via the InterPlanetary FileSystem (IPFS)\footnote{\url{https://ipfs.io}}. It is important to highlight that the IPFS is a content-addressed system: rather than storing key-value pairs, the IPFS derives a key as a function of the value. This behaviour does not match our requirements for the online cache, but allows us to establish a meeting point and perform contact discovery nonetheless.
+\paragraph{} We now describe a proof-of-concept implementation of the contact discovery service written in Go. At the time of writing, this proof-of-concept performs setup locally by emulating the behaviour of the distributed discovery service. Key derivation is performed locally as expected. Finally, a meeting point is established via the InterPlanetary FileSystem (IPFS)\footnote{\url{https://ipfs.io}}. It is important to highlight that the IPFS is a content-addressed system: rather than storing key-value pairs, the IPFS derives a key as a function of the value. This behaviour does not match our requirements for the online cache, but allows us to establish a meeting point and perform contact discovery nonetheless.
 
 
 
@@ -126,7 +126,7 @@ func setupThresholdServers(suite pairing.Suite, secret kyber.Scalar, n, t int) (
 \paragraph{} This simple proof-of-concept application demonstrates the feasibility of a contact discovery scheme built according to our architecture. As expected, our implementation allows users to obtain constraining keys by gathering and combining blind BLS signatures on their discovery identifiers. The key derivation step provides consistent shared key material between two users that know each other's discovery identifier. Finally, we have shown that the shared key material can be used to establish contact online.
 
 
-\paragraph{} The next step in further demonstrating the feasibility of our architecture is benchmarking. To do so, we wish to develop a server-side application that runs online and integrate our discovery scheme in a custom-modified mobile application such as Signal or Celo's mobile clients. This test-bed will allow us to measure the scheme's cost in terms of computations and communication time as well as battery requirements in real-world conditions.
+\paragraph{} The next step in further demonstrating the feasibility of our architecture is benchmarking. To do so, we wish to develop a server-side application that runs online and integrate our discovery scheme in a custom-modified mobile application such as Signal or Celo's mobile clients (similarly to the experiments ran by Kales \textit{et al.} \cite{Kales19}). This test-bed will allow us to measure the scheme's cost in terms of computations and communication time as well as battery requirements in real-world conditions.
 
 
 

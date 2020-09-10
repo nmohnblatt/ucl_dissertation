@@ -1,2 +1,12 @@
-\chapter{Conclusion}
+\chapter{Conclusion and Future Work}
 \label{chap:conclusion}
+
+\paragraph{} Throughout this report, we have investigated means of performing contact discovery in a privacy-preserving manner. We worked under the additional restriction that end-users would be performing this process on a mobile device. Existing solutions fail to meet privacy and efficiency requirements simultaneously. 
+
+\paragraph{} We investigated the application of non-interactive identity-based key exchange protocols (NI-IBKE) to the contact discovery problem. Using threshold cryptography and bilinear pairings, we adapted Boneh and Waters' \cite{LRPRF} NI-IBKE such that users can establish secure communication channels knowing only each other's phone numbers (or an equivalent human-readable identifier). The resulting contact discovery scheme relies on a $t$-out-of-$n$ trust assumption to protect the confidentiality of every user's social graph. This security property is shown to hold in the random oracle model under the decisional bilinear Diffie-Hellman assumption.
+
+\paragraph{} Our scheme's efficiency remains below what is required for a global application. The limiting factor is the time it takes to set up a user. Indeed we estimated that a single commercial-grade desktop computer can enrol users at a rate of 27 per second. This rate may be unable to support an exponentially growing network. Furthermore, it implies a long bootstrapping period to launch our service for an existing network with billions of users. We discussed possible optimisations along with their drawbacks.
+
+\paragraph{} Nonetheless, our scheme shows promising results. We have shown that it may be easily implemented alongside existing privacy-oriented services such as Signal and Celo. Furthermore, once the service is launched the marginal costs of enrolling a new user is low and manageable. User-side computations are fast, even on mobile devices, and can be completed in acceptable times using today's hardware. Finally our simple proof-of-concept demonstrated that the scheme functions as expected.
+
+\paragraph{} Future works can focus on multiple areas. The first is to optimise the server-side setup process in order to allow our scheme to be applicable to existing and fast-growing services. Secondly, security proofs outside of the random oracle model are needed. Finally, other avenues for privacy-preserving contact discovery should be explored. In particular, we believe that functional encryption \cite{Boneh2010} is a promising primitive for such applications.

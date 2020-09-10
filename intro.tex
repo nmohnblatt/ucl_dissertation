@@ -36,16 +36,22 @@ Efficiency therefore constitutes a priority in the design of such contact discov
 
 \section{A peer-to-peer approach}
 
-% TODO review section after writing system chapter
-\paragraph{} In this report, we present a peer-to-peer approach that makes use of pairing-based cryptography. Users interact with a distributed service to obtain private cryptographic keys. Using these keys and their contacts' identifiers, users can locally derive shared secrets to establish an online meeting point, thus completing the discovery process.
+
+\paragraph{} In this report we present an approach based on non-interactive identity-based key exchange protocols. In these protocols, users can set their public key to an identifier of their choice. A trusted key generation centre provides the corresponding secret key. We minimise the trust assumption placed on the key generation centre by breaking it into a distributed entity through the use of threshold cryptography.
 
 
-In using this architecture, we reduce the service operator's role to a minimum and provide clients with the tools to compute shared secret keys with their contacts. Computations on the client side are of linear order with respect to the size of their address book. Furthermore, clients are only expected to communicate with the service during setup and are only required to store short cryptographic material.
+
+%%  review section after writing system chapter
+%\paragraph{} In this report, we present a peer-to-peer approach that makes use of pairing-based cryptography. Users interact with a distributed service to obtain private cryptographic keys. Using these keys and their contacts' identifiers, users can locally derive shared secrets to establish an online meeting point, thus completing the discovery process.
+
+
+\paragraph{} Using this architecture, we reduce the service operator's role to a minimum and provide clients with the tools to compute shared secret keys with their contacts. Computations on the client side are of linear order with respect to the size of their address book. Furthermore, clients are only expected to communicate with the service during setup and are only required to store short cryptographic material.
 
 
 
 \section{Structure}
-% TODO Structure
+
+\paragraph{} This report will be structured as follows. In \autoref{chap:litreview}, we survey existing attempts at privacy-preserving contact discovery. We also describe identity-based cryptosystems and motivate their use in this context. In \autoref{chap:background} we review the cryptographic primitives that serve as building blocks for our proposed contact discovery scheme. \hyperref[chap:system]{Chapter~\ref*{chap:system}} focuses on the system itself. We provide a description of its architecture, outlines of security proofs as well as estimates of the system's performance in the wild. We also describe applications for our system in end-to-end encrypted messaging and mobile-first cryptocurrencies. We describe a proof-of-concept implementation in \autoref{chap:implementation}.  Finally, we conclude in \autoref{chap:conclusion}.
 
 
 

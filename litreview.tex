@@ -1,35 +1,117 @@
-\chapter{Related Work}
+\chapter{Related Works}
 \label{chap:litreview}
 
-\paragraph{} In this chapter we provide an overview of state-of-the-art methods for privacy-preserving contact discovery, as well as academic attempts at solving a similar problem. These methods can be divided according to their underlying approach: the first aims at computing the intersection between a list of registered users and an address book, the second aims at providing users with the necessary cryptographic material needed to authenticate and establish shared secrets between each other.
+\paragraph{} In this chapter we provide an overview of state-of-the-art methods for privacy-preserving contact discovery, as well as academic attempts at solving related problems. These methods can be divided according to their underlying approach: the first aims at computing the intersection between a list of registered users and an address book (\autoref{sec:signal}, \autoref{sec:PSI}), the second aims at providing users with the necessary cryptographic material to authenticate and establish shared secrets between each other (\autoref{sec:PKI}, \autoref{sec:IBKE}).
 
 
-\paragraph{} In \autoref{sec:signal}, we cover Signal's approach which is to simply process each user's address book without storing her contacts \cite{Signal:Tech}. To convince users that they are trustworthy, Signal publish their code and allow users to verify what code is being run by their servers. In \autoref{sec:PSI}, we investigate cryptographic ways to perform a set intersection between two parties without either party learning the other's data. This is known as a private set intersection (PSI). The subsequent attempts fall under the second approach described above. Thus \autoref{sec:PKI} focuses on public key infrastructure and \autoref{sec:IBKE} on identity-based key exchanges.
+\paragraph{} In \autoref{sec:signal}, we cover Signal's approach which is to simply process each user's address book without storing their contacts \cite{Signal:Tech}. To convince users that they are trustworthy, Signal publish their code and allow users to verify what code is being run by their servers. In \autoref{sec:PSI}, we investigate cryptographic ways to perform a set intersection between two parties without either party learning the other's data. This is known as a private set intersection (PSI). \hyperref[sec:PKI]{Section~\ref*{sec:PKI}} focuses on public infrastructure. \hyperref[sec:IBKE]{Section~\ref*{sec:IBKE}} investigates identity-based key exchanges; a promising attempt which has not yet been applied to contact discovery. Finally, we present a short comparison of the described attempts and ideas for novel approaches in \autoref{sec:litcomp}.
 
-\section{Public source code and remote attestation}
+\section{Oblivious address book processing}
 \label{sec:signal}
 
-\subsection{Signal and Intel SGX}
 
-\paragraph{} Signal's approach is arguably the simplest: request a user's address book, process it obliviously against the list of registered users and clear the servers from any knowledge linked to it \cite{Signal:Tech}. While this process may seem trivial, it creates new challenges in terms of security and user trust. First, Signal must guarantee that no knowledge of the address book remains on the server, be it obtained through regular or side channels. Secondly, Signal needs to earn the trust of its users. Not only do they need to convince users that their process is completely oblivious, they must also provide constant evidence that their servers are running that particular process rather than any other.
+\paragraph{} Signal's approach is arguably the simplest: request a user's address book, process it obliviously against the list of registered users and clear the servers from any knowledge linked to it \cite{Signal:Tech}. While this process may seem trivial, it creates new challenges in terms of security and user trust. First, Signal must guarantee that no knowledge of the address book remains on the server, be it obtained through regular or side channels. Secondly, Signal needs to earn the trust of its users. Not only do they need to convince users that their process is completely oblivious, they must also provide constant evidence that their servers are running the oblivious process rather than any other.
 
-\paragraph{} They meet both challenges by publishing their server-side code and performing all their processing within ``secure enclaves'' on their servers.
+\paragraph{} They meet both challenges by publishing their server-side code and performing all their processing within ``secure enclaves'' on their servers. Intel processors support a feature known as Software Guard Extension (SGX). According to Intel, ``SGX allows user-level code to allocate private regions of memory, called enclaves, which are designed to be protected from processes running at higher privilege levels'' \cite{IntelSGX}. Running a secure enclave on a server allows to isolate a client's address book data and its processing from any other process that may be running on the same machine.
+
+\paragraph{}Although SGX prevents the server's administrator to access a client's data through direct channels, side channels may still be available. Indeed, memory access patterns can still be observed. This is particularly problematic since the enclave makes use of server-provided data, namely the list of registered users. The server can observe and record which SGX-encrypted memory locations are accessed as the enclave stores each entry from the list of registered users. When the enclave then performs a comparison between the client's address book and the list of registered users, the server's administrator can record the memory locations that are being accessed and check them against its previous record, thus uncovering a client's address book contents.
+
+\paragraph{} Signal therefore uses private information retrieval (PIR) methods such as oblivious RAM and oblivious Hash Tables. Although we do not detail these techniques here, we note the resulting effects. The server administrator is unable to learn any information from the enclave's memory access locations. The counterpart to this privacy gain is that the enclave's process becomes of linear order with respect to the list of registered users. The overall computation can however be optimised by processing multiple users' address books with a single iteration over the list of registered users.
+
+\paragraph{} Finally, Signal provides evidence that it is indeed running this oblivious process by allowing clients to perform a remote attestation of the secure enclave. In doing so, clients obtain verifiable cryptographic proof that the code ran by the enclave matches the code they have been able to inspect. 
+
+
+\paragraph{} Overall, Signal's approach can be viewed as a combination of PIR, secure hardware and remote attestation techniques. Computations scale linearly but can be batched to speed up the process by a constant factor. This solution to contact discovery provides satisfactory privacy guarantees, however users are still required to periodically send their address book. From a security point of view, doing so provides a relatively large attack surface and exposes the address book to faults in the process's implementation. Furthermore, the contact discovery service is vulnerable to an enumeration attack: a malicious client could query the service for every existing identifier and deduce whether or not the identifier has been registered.
+
+
+
+
 
 
 \section{Private set intersection (PSI)}
 \label{sec:PSI}
 
-Kales // Basic Bloom Filter
 
-% \section{Private information retrieval (PIR)}
+\paragraph{} The second approach we cover is based on a cryptographic protocol known as Private Set Intersection (PSI). In the two-party variant, this protocol ``enables two parties, each holding a private set of elements, to compute the intersection of the two sets while revealing nothing more than the intersection itself'' \cite{Chase2020}.  Variants of the protocol allow for only one of the two parties (referred to as the \textit{sender}) to learn the set intersection.
+
+\paragraph{} Classic implementations of PSI protocols are designed for cases where both sets are of similar sizes. Their communication and computational complexity are linear with respect to the size of the larger set \cite{Kales19}. Unfortunately, this would be extremely impractical in our use case. Indeed, a user's address book is almost a million times smaller than the set of registered user. This issue is addressed by so-called \textit{asymmetric}, or \textit{unbalanced}, PSI protocols \cite{Chen2017,Demmler2018,Kales19,Kiss2017}. In these protocols, much of the computational work is performed offline in a one-time setup step. This allows communication and computations in the online phase to scale linearly with respect to the size of the smaller set \cite{Kales19}. We will briefly present the core ideas and data structures that support these protocols. We will then present results from the state-of-the-art implementation of such techniques to our specific use case.
+
+\paragraph{} Asymmetric PSI protocols are often based on probabilistic data structures that allow for rapid membership testing such as Bloom filters \cite{Bloom1970} and their improvement known as Cuckoo filters \cite{Fan2014}. The construction and functioning of a Bloom filter are succinctly explained by Cao as quoted below:
+\begin{quote}
+	``The idea is to allocate a vector $v$ of $m$ bits, initially all set to 0, and then choose $k$ independent hash functions, $h_1, h_2, \ldots, h_k$, each with [output domain] $\{1,\ldots,m\}$. For each element $a \in A$, the bits at positions $h_1(a), h_2(a), \ldots, h_k(a)$ in $v$ are set to 1. (A particular bit might be set to 1 multiple times.) Given a query for $b$ we check the bits at positions $h_1(b), h_2(b), \ldots, h_k(b)$. If any of them is 0, then certainly $b$ is not in the set $A$. Otherwise we conjecture that $b$ is in the set although there is a certain probability that we are wrong.'' \cite{BloomCisc}
+\end{quote}
+
+\noindent The probability of a false-positive is a function of parameters $k$, $m$ and the size $n$ of the input set $A$. Cuckoo filters use a similar principle but are more space-efficient and provide additional functionality such as dynamically adding and removing items \cite{Fan2014}.
 
 
-\section{Public key infrastructure (PKI)}
+\paragraph{} The core idea that underlies many of the protocols we study \cite{Demmler2018,Kales19} is for a sender (the service's client) to privately submit requests for membership inclusion tests on a Bloom or Cuckoo filter built by the receiver (the server holding the list of registered users). Private requests are performed by either submitting PIR requests \cite{Demmler2018} or by using oblivious pseudorandom functions \cite{Kales19}.
+
+\paragraph{} The latter of these approaches yields the fastest performance as well as security guarantees against malicious clients and server. In the protocol described by Kales \textit{et al.} \cite{Kales19}, the server masks the phone numbers of registered users using a keyed pseudorandom function (PRF) and stores them in a Cuckoo filter with highly optimised parameters. The client then downloads this filter. To check for membership inclusion, the client submits a (blinded) version of their contacts to the server for it to obliviously evaluate the pseudorandom function. Using the obtained PRF outputs, a client can probe the Cuckoo filter for membership. 
+
+\paragraph{} The fastest implementation of the protocol allows to check 1024 address book entries against $2^{28}$ registered users (approximately 270 million users) in 2.92 seconds over a Wi-Fi connection \cite{Kales19}. Clients are however expected to download more than 1GB of data prior to this online phase. This is extremely impractical under current cellular network speeds and data plans. Scaling to more than 2 billion users ($2^{31}$) requires clients to download approximately 8GB of data. We therefore conclude that PSI protocols are currently unsuitable for mobile contact discovery.
+
+
+
+
+\section{Public infrastructure}
 \label{sec:PKI}
 
-CONIKs // DNS
+\paragraph{} In the following two sections, we move away from the idea of computing an intersection between the list of registered users and an address book. Instead we focus on means by which a users can learn the necessary information to communicate with a specific target contact.
+
+\subsubsection{\textit{PROUD}: leveraging DNS}
+
+\paragraph{} Papadopoulos \textit{et al.} \cite{Papadopoulos18} present \textit{PROUD}, a contact discovery service that makes use of the DNS infrastructure as a key-value pair storage system. This approach assumes that users are able to exchange public keys through out-of-bound communications. Using their public and private keys along with their identifiers, two users Alice and Bob can generate a unique, secret URL that points to user-chosen content. At this address, Alice and Bob can store the necessary information to allow each other to establish the communication channel of their choice. To provide confidentiality, this information is encrypted under the recipient's public key.
+
+\paragraph{} The URL is generated in the form ``$R(SE_{AB}).example.com$'', where $R(SE_{AB})$ is the output of a pseudorandom number generator (PRNG) when fed the seed $SE_{AB}$. This seed is either exchanged out-of-bound or can be based on Alice and Bob's identifiers. In both cases, the authors recommend that the seed be refreshed periodically.
+
+\paragraph{} Unfortunately, working under the assumption that users are able to exchange public keys through out-of-bound communications seems to remove the need for contact discovery. Indeed, such users would also be able to exchange network addresses in the same way, and do not require linking this data to a human-readable identifier. Thus if we assume users are only able to exchange human-readable identifiers, we need to bind these identifiers to a public key. Ideally, the binding can be kept private and maintained by an untrusted authority. One solution is to make use of the CONIKS system.
+
+\subsubsection{CONIKS: replacing public key infrastructure}
+
+\paragraph{} CONIKS provides the infrastructure to maintain a consistent record of identifiers-to-public-key bindings without relying on certificates \cite{Melara2014}. Consistency is ensured by keeping bindings in a Merkle tree; the tree root is then signed by a relevant authority. Signed tree roots are published in order to allow users to audit the infrastructure. Updates to the tree can also be shown to be consistent. This property is maintained by creating a hash chain of signed tree roots: an updated tree root is hashed alongside the previous signed tree root and the result is once again signed by the relevant authority. 
+
+
+\paragraph{} As users query the infrastructure for a specific identifier's public key, the identity provider replies with the requested binding and a Merkle authentication path. This allows users to recompute the current tree root and compare it with the advertised signed tree root. Further mechanisms are implemented to ensure that an identity provider cannot produce a fork in its signed tree root hash chain in order to present falsified bindings. According to the authors, users can monitor key binding consistency by downloading less than 20kB of data per day \cite{Melara2014}.
+
+
+\paragraph{}  Contact discovery can therefore be performed by querying the CONIKS infrastructure for a contact's identifier-to-public-key binding. To protect the privacy of a user's social graph, Melara \textit{et al.} \cite{Melara2014} suggest that queries to the CONIKS infrastructure be made through an anonymity network such as a mixnet or onion routing. In doing so, users remain anonymous in the eyes of the identity provider, which will therefore be unable to reconstruct their social graph. However, the identity provider may infer a user's popularity or their communication habits by monitoring the number of queries for their binding. Furthermore, queries must be rate-limited to prevent enumeration attacks.
+
 
 \section{Identity-based key exchange (IBKE)}
 \label{sec:IBKE}
 
-Boneh Waters // 
+
+\paragraph{} Finally we investigate methods for users to derive shared secrets based on their identities only. In doing so we remove the need for out-of-bound key verification or any form of public key infrastructure. 
+
+\paragraph{} This idea is known as identity-based cryptography and was first theorised by Shamir \cite{Shamir1985} in 1984. In this seminal paper, he describes the scheme as a ``public key cryptosystem with an extra twist'':
+\begin{quote}
+	``Instead of generating a random pair of public/secret keys and publishing one of these keys, the user chooses his name and network address as his public key. [\dots] The corresponding secret key is computed by a key generation center and issued to the user [\dots] when he first joins the network.'' \cite{Shamir1985}
+\end{quote}
+
+\noindent The first practical implementations of such systems were presented by Sakai \textit{et al.} \cite{Sakai2000} and Boneh and Franklin \cite{Boneh2001}. Both rely on a cryptographic primitive known as \textit{bilinear pairings} (or simply \textit{pairing}), which we further discuss in \autoref{chap:background}. As with classical public key cryptosystems, the public/secret key pairs can be used to perform message encryption, digital signatures and key exchanges. We focus on Identity-Based Key Exchange (IBKE) protocols.
+
+
+\paragraph{} This approach can be adapted to perform contact discovery. Indeed, users can choose an identifier (phone number, email address or username) as their public key and receive the corresponding private key. Knowing a contact's identifier is therefore equivalent to knowing their public key. Using her private key and Bob's identifier, Alice can perform a key exchange protocol. Similarly, Bob can compute the same shared key using his secret key and Alice's identifier. Since Alice and Bob have not interacted before establishing a shared key, a protocol allowing the described functionality is known as a Non-Interactive Identity-Based Key Exchange (NI-IBKE). Boneh and Waters \cite{LRPRF} describe a construction allowing such a protocol.
+
+\paragraph{} To the best of our knowledge, NI-IBKE protocols have not yet been applied to the contact discovery problem. This is due to two major concerns. Firstly, NI-IBKE protocols rely on a trusted key generation centre. This trusted authority is able to compute any user's secret key and can therefore decrypt any message, or forge any signature. Secondly, NI-IBKE implementations are only shown to be secure in the random oracle model \cite{Freire2014,Tomida2019}.
+
+\section{Comparison and future attempts}
+\label{sec:litcomp}
+
+\paragraph{} As we have seen, privacy-preserving contact discovery remains an open problem. Attempts that provide strong cryptographic guarantees are still inefficient for applications with billions of users performing contact discovery on mobile devices. On the other hand, performing an oblivious set intersection is possible, as shown by Signal's attempt, but relies on trusted hardware assumptions.
+
+\paragraph{} NI-IBKE protocols show promising properties. Indeed, they allow users to compute shared secrets without the need to exchange cryptographic material out of bounds. Furthermore, such a system can be made resistant to enumeration attacks since both users need to take action to establish a connection. We will therefore attempt to mitigate the concerns raised in \autoref{sec:IBKE} and integrate the NI-IBKE protocol into a contact discovery scheme.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
