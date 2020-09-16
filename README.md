@@ -7,4 +7,4 @@ Please download `main.pdf` to read the full report.
 
 
 ### Implementation 
-See [proof-of-concept](https://github.com/nmohnblatt/cd_client) implemented in Go using the [kyber library](https://.github.com/dedis/kyber).
+See [proof-of-concept](https://github.com/nmohnblatt/cd_client) implemented in Go using the [kyber library](https://github.com/dedis/kyber).
